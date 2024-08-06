@@ -1,5 +1,4 @@
 import asyncio
-import os
 import random
 from argparse import ArgumentParser
 from itertools import cycle
@@ -25,8 +24,7 @@ Select an action:
 def get_session_names() -> list[str]:
     session_path = Path("sessions")
     session_files = session_path.glob("*.session")
-    session_names = [file.stem for file in session_files]
-    return session_names
+    return [file.stem for file in session_files]
 
 
 async def register_sessions() -> None:
@@ -34,8 +32,9 @@ async def register_sessions() -> None:
     if not session_name:
         return
 
-    if not os.path.exists(path="sessions"):
-        os.mkdir(path="sessions")
+    sessions_path = Path("sessions")
+    if not sessions_path.exists():
+        sessions_path.mkdir()
 
     session = Client(name=session_name, api_id=config.API_ID, api_hash=config.API_HASH, workdir="sessions/")
 
@@ -47,14 +46,11 @@ async def register_sessions() -> None:
     )
 
 
-def get_proxies() -> list[Proxy]:
+def get_proxies() -> list:
     if config.USE_PROXY_FROM_FILE:
-        with open(file="proxies.txt", encoding="utf-8-sig") as file:
-            proxies = [Proxy.from_str(proxy=row.strip()).as_url for row in file if row.strip()]
-    else:
-        proxies = []
-
-    return proxies
+        with Path("proxies.txt").open() as file:
+            return [Proxy.from_str(proxy=row.strip()).as_url for row in file if row.strip()]
+    return []
 
 
 async def get_tg_clients() -> list[Client]:
@@ -63,23 +59,20 @@ async def get_tg_clients() -> list[Client]:
     if not session_names:
         raise FileNotFoundError("Not found session files")
 
-    tg_clients = [
+    return [
         Client(
             name=session_name,
             api_id=config.API_ID,
             api_hash=config.API_HASH,
             workdir="sessions/",
-            plugins=dict(root="bot/plugins"),
         )
         for session_name in session_names
     ]
 
-    return tg_clients
-
 
 async def run_bot_with_delay(tg_client, proxy, delay):
     if delay > 0:
-        log.info(f"{tg_client.name} | Wait {delay} seconds before start")
+        log.bind(session_name=tg_client.name).info(f"Wait {delay} seconds before start")
         await asyncio.sleep(delay)
     await run_bot(tg_client=tg_client, proxy=proxy)
 

@@ -14,6 +14,7 @@ from bot.config.logger import log
 from bot.config.settings import config
 
 from .api import CryptoBotApi
+from .bet_counter import BetCounter
 from .errors import TapsError
 from .models import DbSkill, DbSkills, Profile, ProfileData, SkillLevel
 
@@ -22,6 +23,7 @@ class CryptoBot(CryptoBotApi):
     def __init__(self, tg_client: Client):
         super().__init__(tg_client)
         self.temporary_stop_taps_time = 0
+        self.bet_calculator = BetCounter(self)
 
     async def sleeper(self, delay: int = config.RANDOM_SLEEP_TIME, additional_delay: int = 0) -> None:
         await asyncio.sleep(random.random() * delay + additional_delay)
@@ -126,57 +128,6 @@ class CryptoBot(CryptoBotApi):
         money_str = f"Profit: +{money}" if money > 0 else (f"Loss: {money}" if money < 0 else "Profit: 0")
         self.logger.info(f"PvP negotiations finished. {money_str}")
 
-    def calculate_bet(self) -> int:
-        bet_steps_count = 7  # from game js, may be changed in the future
-
-        def smart_zero_round(amount: int):
-            def round_to_nearest(value, base=100):
-                return round(value / base) * base
-
-            if amount < 100:
-                return round_to_nearest(amount, 50)
-            elif amount < 1000:
-                return round_to_nearest(amount, 100)
-            elif amount < 10000:
-                return round_to_nearest(amount, 1000)
-            elif amount < 100000:
-                return round_to_nearest(amount, 10000)
-            elif amount < 1000000:
-                return round_to_nearest(amount, 100000)
-            elif amount < 10000000:
-                return round_to_nearest(amount, 1000000)
-            elif amount < 100000000:
-                return round_to_nearest(amount, 10000000)
-            else:
-                return round_to_nearest(amount, 1000)
-
-        def min_bet():
-            multiplier = 2
-            if self.level < 3:
-                multiplier = 5
-            elif self.level < 6:
-                multiplier = 4
-            elif self.level < 10:
-                multiplier = 3
-
-            calculated_bet = smart_zero_round(self.mph * multiplier / (bet_steps_count * 3))
-            return calculated_bet or 100
-
-        def max_bet():
-            return min_bet() * bet_steps_count
-
-        avail_bet = 0
-        max_bet = max_bet()
-        if max_bet < self.balance:
-            avail_bet = max_bet
-        else:  # reduce the bet if there is not enough money
-            min_bet = min_bet()
-            while max_bet > self.balance and max_bet - min_bet >= min_bet:
-                max_bet -= min_bet
-            avail_bet = max(max_bet, min_bet)
-
-        return avail_bet
-
     async def get_friend_reward(self):
         unrewarded_friends = [friend for friend in self.user_profile.friends if friend["bonusToTake"] > 0]
         if unrewarded_friends:
@@ -220,7 +171,7 @@ class CryptoBot(CryptoBotApi):
                 current_invest = await self.get_funds_info()
                 if "funds" in current_invest and not current_invest["funds"]:
                     for fund in helper.funds:
-                        if self.balance > (amount := self.calculate_bet()):
+                        if self.balance > (amount := self.bet_calcultaor.calculate_bet()):
                             await self.invest({"data": {"fund": fund, "money": amount}})
                         else:
                             self.logger.info("Not enough money for invest")
@@ -257,7 +208,7 @@ class CryptoBot(CryptoBotApi):
     async def upgrade_hero(self) -> None:
         skills = sorted(self._get_available_skills(), key=lambda x: x.weight, reverse=True)
         for skill in skills:
-            if self.balance >= config.MONEY_TO_SAVE and self.balance > skill.price_for_level(skill.next_level):
+            if (self.balance - skill.skill_price) <= config.MONEY_TO_SAVE:
                 await self.skills_improve(json_body={"data": skill.key})
                 self.logger.info(
                     f"Skill: <blue>{skill.title}</blue> upgraded to level: <cyan>{skill.next_level}</cyan> "
@@ -334,7 +285,7 @@ class CryptoBot(CryptoBotApi):
                             continue
 
                     profile = await self.syn_hero_balance()
-
+                    config.MONEY_TO_SAVE = self.bet_calculator.max_bet()
                     if config.PVP_ENABLED:
                         await self.starting_pvp()
 
