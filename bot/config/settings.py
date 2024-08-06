@@ -52,5 +52,8 @@ class Settings(BaseSettings):
 
     BOT_SLEEP_TIME: list[int] = [20, 360]
 
+    base_url: str = "https://game.muskempire.io/"
+    bot_name: str = "muskempire_bot"
+
 
 config = Settings()

@@ -264,7 +264,7 @@ class CryptoBot(CryptoBotApi):
                     f"Profit: <yellow>{skill.skill_profit}</yellow> "
                     f"Costs: <blue>{skill.skill_price}</blue> "
                     f"Money stay: <yellow>{self.balance}</yellow> "
-                    f"Skill weight <magenta>{skill.weight:.5}</magenta>"
+                    f"Skill weight <magenta>{skill.weight:.5f}</magenta>"
                 )
                 await self.sleeper()
 

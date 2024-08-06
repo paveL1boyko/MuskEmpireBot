@@ -1,6 +1,6 @@
 import asyncio
 from datetime import UTC, datetime
-from urllib.parse import unquote
+from urllib.parse import parse_qs
 
 import aiohttp
 from better_proxy import Proxy
@@ -11,6 +11,7 @@ from pyrogram.raw.functions.messages import RequestWebView
 from bot.config.logger import log
 from bot.helper.utils import error_handler, handle_request
 
+from ..config.settings import config
 from .errors import TapsError
 from .models import Profile, ProfileData, PvpData, QuizHelper
 
@@ -48,33 +49,30 @@ class CryptoBotApi:
                     await self.tg_client.connect()
                 except (Unauthorized, UserDeactivated, AuthKeyUnregistered) as error:
                     raise RuntimeError(str(error)) from error
+            peer = await self.tg_client.resolve_peer(config.bot_name)
             web_view = await self.tg_client.invoke(
                 RequestWebView(
-                    peer=await self.tg_client.resolve_peer("muskempire_bot"),
-                    bot=await self.tg_client.resolve_peer("muskempire_bot"),
+                    peer=peer,
+                    bot=peer,
                     platform="android",
                     from_bot_menu=False,
-                    url="https://game.muskempire.io/",
+                    url=config.base_url,
                 )
             )
-            auth_url = web_view.url
-            tg_web_data = unquote(
-                string=auth_url.split("tgWebAppData=", maxsplit=1)[1].split("&tgWebAppVersion", maxsplit=1)[0]
-            )
+            tg_web_data = parse_qs(web_view.url.split("#")[1]).get("tgWebAppData")[0]
+            query_params = parse_qs(tg_web_data)
 
-            user_hash = tg_web_data[tg_web_data.find("hash=") + 5 :]
-            self.api_key = user_hash
+            self.api_key = query_params["hash"][0]
             if self.tg_client.is_connected:
                 await self.tg_client.disconnect()
 
-            login_data = {"data": {"initData": tg_web_data, "platform": "android", "chatId": ""}}
-            return login_data
+            return {"data": {"initData": tg_web_data, "platform": "android", "chatId": ""}}
 
         except RuntimeError as error:
             raise error
 
         except Exception:
-            self.logger.error("Authorization error: {error}")
+            self.logger.exception("Authorization error")
             await asyncio.sleep(delay=3)
 
     @error_handler()
@@ -217,10 +215,10 @@ class CryptoBotApi:
             response = await self.http_client.get(url="https://httpbin.org/ip", timeout=aiohttp.ClientTimeout(5))
             ip = (await response.json()).get("origin")
             self.logger.info(f"Proxy IP: {ip}")
-        except Exception as error:
-            self.logger.error(f"Proxy: {proxy} | Error: {error}")
+        except Exception:
+            self.logger.exception(f"Proxy: {proxy}")
 
-    def update_money_balanse(self, response_json: dict) -> None:
+    def update_money_balanse(self, response_json: dict) -> dict:
         response_json = response_json["data"]
         self.balance = int(response_json["hero"]["money"])
         self.level = int(response_json["hero"]["level"])
