@@ -208,7 +208,7 @@ class CryptoBot(CryptoBotApi):
     async def upgrade_hero(self) -> None:
         skills = sorted(self._get_available_skills(), key=lambda x: x.weight, reverse=True)
         for skill in skills:
-            if (self.balance - skill.skill_price) <= config.MONEY_TO_SAVE:
+            if (self.balance - skill.skill_price) >= config.MONEY_TO_SAVE:
                 await self.skills_improve(json_body={"data": skill.key})
                 self.logger.info(
                     f"Skill: <blue>{skill.title}</blue> upgraded to level: <cyan>{skill.next_level}</cyan> "
