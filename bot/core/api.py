@@ -1,9 +1,9 @@
 import asyncio
 import random
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import NamedTuple
 from urllib.parse import parse_qs
-
+from pytz import UTC
 import aiohttp
 from aiocache import Cache, cached
 from better_proxy import Proxy

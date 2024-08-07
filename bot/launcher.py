@@ -74,9 +74,9 @@ async def run_bot_with_delay(tg_client: Client, proxy: str | None) -> None:
 
 async def run_clients(tg_clients: list[Client]) -> None:
     proxy_cycle = cycle(get_proxies())
-    async with asyncio.TaskGroup() as tg:
-        for tg_client in tg_clients:
-            tg.create_task(run_bot_with_delay(tg_client=tg_client, proxy=next(proxy_cycle)))
+    await asyncio.gather(
+        *[run_bot_with_delay(tg_client=tg_client, proxy=next(proxy_cycle)) for tg_client in tg_clients]
+    )
 
 
 async def start() -> None:

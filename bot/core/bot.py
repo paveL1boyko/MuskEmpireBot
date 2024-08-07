@@ -3,11 +3,12 @@ import math
 import random
 import time
 from collections.abc import Generator
-from datetime import UTC, datetime
+from datetime import datetime
 
 import aiohttp
 from aiohttp_proxy import ProxyConnector
 from pyrogram import Client
+from pytz import UTC
 
 from bot.config.headers import headers
 from bot.config.logger import log

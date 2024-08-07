@@ -1,4 +1,4 @@
-from enum import StrEnum
+from enum import Enum
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -13,14 +13,14 @@ logo = """
 """
 
 
-class Strategy(StrEnum):
+class Strategy(str, Enum):
     flexible = "flexible"
     protective = "protective"
     aggressive = "aggressive"
     random = "random"
 
 
-class League(StrEnum):
+class League(str, Enum):
     bronze = "bronze"
     silver = "silver"
     gold = "gold"
