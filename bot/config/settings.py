@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     PVP_STRATEGY: Strategy = Strategy.random
     PVP_COUNT: int = 10
 
-    SLEEP_BETWEEN_START: list[int] = [4, 10]
+    SLEEP_BETWEEN_START: list[int] = [4, 20]
     ERRORS_BEFORE_STOP: int = 3
     USE_PROXY_FROM_FILE: bool = False
 
