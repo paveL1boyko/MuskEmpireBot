@@ -73,7 +73,7 @@ class CryptoBotApi:
             )
             tg_web_data = parse_qs(web_view.url.split("#")[1]).get("tgWebAppData")[0]
             query_params = parse_qs(tg_web_data)
-
+            await self.tg_client.disconnect()
             return TgWebData(
                 request_data={
                     "data": {
