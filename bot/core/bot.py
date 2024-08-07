@@ -141,7 +141,7 @@ class CryptoBot(CryptoBotApi):
             already_funded = {i["fundKey"] for i in current_invest["funds"]}
             for fund in list(helper.funds - already_funded)[: 3 - len(already_funded)]:
                 if self.balance > (amount := self.bet_calculator.calculate_bet()):
-                    await self.invest({"data": {"fund": fund, "money": amount}})
+                    await self.invest(json_body={"data": {"fund": fund, "money": amount}})
                 else:
                     self.logger.info("Not enough money for invest")
 

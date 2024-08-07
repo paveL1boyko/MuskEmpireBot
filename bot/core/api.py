@@ -3,7 +3,7 @@ import random
 from datetime import datetime
 from typing import NamedTuple
 from urllib.parse import parse_qs
-from pytz import UTC
+
 import aiohttp
 from aiocache import Cache, cached
 from better_proxy import Proxy
@@ -11,6 +11,7 @@ from pyrogram import Client
 from pyrogram.errors import AuthKeyUnregistered, Unauthorized, UserDeactivated
 from pyrogram.raw.functions.messages import RequestAppWebView
 from pyrogram.raw.types import InputBotAppShortName
+from pytz import UTC
 
 from bot.config.logger import log
 from bot.config.settings import config
@@ -210,10 +211,10 @@ class CryptoBotApi:
     async def invest(self, *, response_json: dict, json_body: dict) -> None:
         data = self._update_money_balanse(response_json)
         for fnd in data["funds"]:
-            if fnd["fundKey"] == data["fund"]:
+            if fnd["fundKey"] == json_body["data"]["fund"]:
                 money = fnd["moneyProfit"]
-                money_str = f"Profit: +{money}" if money > 0 else (f"Loss: {money}" if money < 0 else "Profit: 0")
-                self.logger.success(f"Invest completed. {money_str}")
+                money_str = f"Win: <yellow>+{money}</yellow>" if money > 0 else f"Loss: <red>{money}</red>"
+                self.logger.success(f"Invest completed: {money_str}")
                 break
 
     @error_handler()
