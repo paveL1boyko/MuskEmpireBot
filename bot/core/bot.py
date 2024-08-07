@@ -16,7 +16,7 @@ from bot.config.settings import config
 from .api import CryptoBotApi
 from .bet_counter import BetCounter
 from .errors import TapsError
-from .models import DbSkill, DbSkills, Profile, ProfileData, SkillLevel
+from .models import DbSkill, DbSkills, Profile, ProfileData, QuizHelper, SkillLevel
 
 
 class CryptoBot(CryptoBotApi):
@@ -24,11 +24,9 @@ class CryptoBot(CryptoBotApi):
         super().__init__(tg_client)
         self.temporary_stop_taps_time = 0
         self.bet_calculator = BetCounter(self)
+        self.authorized = False
 
-    async def sleeper(self, delay: int = config.RANDOM_SLEEP_TIME, additional_delay: int = 0) -> None:
-        await asyncio.sleep(random.random() * delay + additional_delay)
-
-    async def claim_day_reward(self) -> None:
+    async def claim_daily_reward(self) -> None:
         daily_index = None
         for day, status in self.user_profile.daily_rewards.items():
             if status == "canTake":
@@ -68,10 +66,6 @@ class CryptoBot(CryptoBotApi):
                 self.logger.warning(f"Taps stopped (<red>{e.message}</red>)")
                 self.temporary_stop_taps_time = time.monotonic() + 60 * 60 * 3
                 break
-            except Exception:
-                self.logger.exception("Taps error")
-                self.errors += 1
-                break
 
     async def _perform_pvp(self, league: dict, strategy: str, count: int) -> None:
         self.logger.info(
@@ -91,90 +85,64 @@ class CryptoBot(CryptoBotApi):
             if strategy == "random":
                 current_strategy = random.choice(self.strategies)
             self.logger.info("Searching opponent...")
-            try:
-                json_data = {"data": {"league": league["key"], "strategy": current_strategy}}
-                response_json = await self.get_pvp_fight(json_body=json_data)
-                if response_json is None:
-                    await self.sleeper(delay=10, additional_delay=5)
-                    continue
+            json_data = {"data": {"league": league["key"], "strategy": current_strategy}}
+            response_json = await self.get_pvp_fight(json_body=json_data)
+            if response_json is None:
+                await self.sleeper(delay=10, additional_delay=5)
+                continue
 
-                await self.sleeper()
-                count -= 1
+            await self.sleeper()
+            count -= 1
 
-                fight = response_json.fight
-                opponent_strategy = (
-                    fight.player2Strategy if fight.player1 == self.user_profile.user_id else fight.player1Strategy
-                )
-                if fight.winner == self.user_id:
-                    money += fight.moneyProfit
-                    log_part = f"You WIN (<yellow>+{fight.moneyProfit})</yellow>"
-                else:
-                    money -= fight.moneyContract
-                    log_part = f"You <red>LOSE</red> (<yellow>-{fight.moneyProfit}</yellow>)"
-                self.logger.success(
-                    f"Contract sum: <yellow>{fight.moneyContract}</yellow> | "
-                    f"Your strategy: <cyan>{current_strategy}</cyan> | "
-                    f"Opponent strategy: <blue>{opponent_strategy}</blue> | "
-                    f"{log_part}"
-                )
+            fight = response_json.fight
+            opponent_strategy = (
+                fight.player2Strategy if fight.player1 == self.user_profile.user_id else fight.player1Strategy
+            )
+            if fight.winner == self.user_id:
+                money += fight.moneyProfit
+                log_part = f"You WIN (<yellow>+{fight.moneyProfit})</yellow>"
+            else:
+                money -= fight.moneyContract
+                log_part = f"You <red>LOSE</red> (<yellow>-{fight.moneyProfit}</yellow>)"
+            self.logger.success(
+                f"Contract sum: <yellow>{fight.moneyContract}</yellow> | "
+                f"Your strategy: <cyan>{current_strategy}</cyan> | "
+                f"Opponent strategy: <blue>{opponent_strategy}</blue> | "
+                f"{log_part}"
+            )
 
-                await self.get_pvp_claim()
+            await self.get_pvp_claim()
 
-                await self.sleeper()
-            except Exception as e:
-                self.logger.error(f"PvP error: {e!s}")
-                self.errors += 1
-                await self.sleeper()
-        money_str = f"Profit: +{money}" if money > 0 else (f"Loss: {money}" if money < 0 else "Profit: 0")
+            await self.sleeper()
+            money_str = f"Profit: +{money}" if money > 0 else (f"Loss: {money}" if money < 0 else "Profit: 0")
         self.logger.info(f"PvP negotiations finished. {money_str}")
 
-    async def get_friend_reward(self):
+    async def get_friend_reward(self) -> None:
         unrewarded_friends = [friend for friend in self.user_profile.friends if friend["bonusToTake"] > 0]
         if unrewarded_friends:
             self.logger.info("Reward for friends available")
             for friend in unrewarded_friends:
                 await self.friend_reward(json_body={"data": friend["id"]})
-                self.logger.success(f"Reward for friend {friend['name']} claimed")
 
-    async def execute_quests(self):
-        unrewarded_quests = [quest["key"] for quest in self.user_profile.quests if not quest["isRewarded"]]
-        if unrewarded_quests:
-            self.logger.info("Quest rewards available")
-            for quest in unrewarded_quests:
-                if await self.quest_reward(json_body={"data": [quest]}):
-                    self.logger.success(f"Reward for quest: <green>{quest}</green> claimed")
-        await self.daily_quests()
-
-    async def solve_quiz_and_try_funds(self) -> None:
+    async def solve_quiz_and_rebus(self) -> None:
         for quest in self.dbs["dbQuests"]:
-            if "rebus" in quest["key"]:
-                self.rebus_key = quest["key"]
-                self.rebus_answer = quest["checkData"]
-                break
-        self.need_rebus = True
-        for quest in self.user_profile.quests:
-            if self.rebus_key in quest["key"]:
-                self.need_rebus = False
-                break
-        helper = await self.get_helper()
+            quest_key = quest["key"]
+            if any(i in quest_key for i in ("riddle", "rebus")) and not self._is_event_solved(quest_key):
+                await self.solve_rebus(json_body={"data": [quest_key, quest["checkData"]]})
+                self.logger.info(f"Was solved <green>{quest['title']}</green>")
 
-        if helper:
-            if self.need_quiz and helper.quiz:
-                await self.daily_quest_reward(json_body={"data": {"quest": "quiz", "code": helper.quiz}})
-                self.need_quiz = False
-                self.logger.success("Reward for daily quiz claimed")
-            if helper.rebus and self.need_rebus:
-                await self.solve_rebus({"data": [self.rebus_key, self.rebus_answer]})
-                self.need_rebus = False
-                self.logger.success("Reward for daily rebus claimed")
-            if helper.funds:
-                current_invest = await self.get_funds_info()
-                if "funds" in current_invest and not current_invest["funds"]:
-                    for fund in helper.funds:
-                        if self.balance > (amount := self.bet_calcultaor.calculate_bet()):
-                            await self.invest({"data": {"fund": fund, "money": amount}})
-                        else:
-                            self.logger.info("Not enough money for invest")
+    def _is_event_solved(self, quest_key: str) -> bool:
+        return any(i["key"] == quest_key for i in self.user_profile.quests)
+
+    async def set_funds(self, helper: QuizHelper) -> None:
+        if helper.funds:
+            current_invest = await self.get_funds_info()
+            already_funded = {i["fundKey"] for i in current_invest["funds"]}
+            for fund in list(helper.funds - already_funded)[: 3 - len(already_funded)]:
+                if self.balance > (amount := self.bet_calculator.calculate_bet()):
+                    await self.invest({"data": {"fund": fund, "money": amount}})
+                else:
+                    self.logger.info("Not enough money for invest")
 
     async def starting_pvp(self) -> None:
         if self.dbs:
@@ -228,6 +196,9 @@ class CryptoBot(CryptoBotApi):
         skill.next_level = (
             self.user_profile.skills[skill.key]["level"] + 1 if self.user_profile.skills.get(skill.key) else 1
         )
+        skill.skill_profit = skill.calculate_profit(skill.next_level)
+        skill.skill_price = skill.price_for_level(skill.next_level)
+        skill.weight = skill.skill_profit / skill.skill_price
         # check the current skill is still in the process of improvement
         if (finsh_time := self.user_profile.skills.get(skill.key, {}).get("finishUpgradeDate")) and datetime.now(
             UTC
@@ -236,9 +207,6 @@ class CryptoBot(CryptoBotApi):
         skill_requirements = skill.get_level_by_skill_level(skill.next_level)
         if not skill_requirements:
             return True
-        skill.skill_profit = skill.calculate_profit(skill.next_level)
-        skill.skill_price = skill.price_for_level(skill.next_level)
-        skill.weight = skill.skill_profit / skill.skill_price
         return (
             len(self.user_profile.friends) >= skill_requirements.requiredFriends
             and self.user_profile.level >= skill_requirements.requiredHeroLevel
@@ -256,6 +224,16 @@ class CryptoBot(CryptoBotApi):
                 return True
         return False
 
+    async def login_to_app(self, proxy: str | None) -> bool:
+        if self.authorized:
+            return True
+        tg_web_data = await self.get_tg_web_data(proxy=proxy)
+        self.http_client.headers["Api-Key"] = tg_web_data.hash
+        if await self.login(json_body=tg_web_data.request_data):
+            self.authorized = True
+            return True
+        return False
+
     async def run(self, proxy: str | None) -> None:
         proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
 
@@ -264,59 +242,60 @@ class CryptoBot(CryptoBotApi):
             if proxy:
                 await self.check_proxy(proxy=proxy)
 
-            self.authorized = False
             while True:
                 if self.errors >= config.ERRORS_BEFORE_STOP:
                     self.logger.error("Bot stopped (too many errors)")
                     break
                 try:
-                    if not self.authorized:
-                        login_data = await self.get_tg_web_data(proxy=proxy)
-                        if await self.login(json_body=login_data):
-                            self.authorized = True
-                            self.dbs = await self.get_dbs()
+                    if await self.login_to_app(proxy):
+                        self.dbs = await self.get_dbs()
 
-                            self.user_profile: ProfileData = await self.get_profile_full()
-                            if self.user_profile.offline_bonus > 0:
-                                await self.get_offline_bonus()
-                            else:
-                                self.logger.info("Offline bonus not available")
-                        else:
-                            continue
+                        self.user_profile: ProfileData = await self.get_profile_full()
+                        if self.user_profile.offline_bonus > 0:
+                            await self.get_offline_bonus()
+                    else:
+                        continue
 
                     profile = await self.syn_hero_balance()
+
                     config.MONEY_TO_SAVE = self.bet_calculator.max_bet()
+
                     if config.PVP_ENABLED:
                         await self.starting_pvp()
 
-                    await self.upgrade_hero()
+                    if config.AUTO_UPGRADE:
+                        await self.upgrade_hero()
 
-                    await self.claim_day_reward()
-                    await self.execute_quests()
+                    await self.claim_daily_reward()
 
                     await self.get_friend_reward()
 
                     if config.TAPS_ENABLED and profile.energy and time.monotonic() > self.temporary_stop_taps_time:
                         await self.perform_taps(profile)
 
-                    await self.solve_quiz_and_try_funds()
+                    if helper := await self.get_helper():
+                        await self.set_funds(helper)
+                        await self.solve_quiz_and_rebus()
 
                     await self.syn_hero_balance()
 
                     sleep_time = random.randint(*config.BOT_SLEEP_TIME)
                     self.logger.info(f"Sleep minutes {sleep_time // 60} minutes")
                     await asyncio.sleep(sleep_time)
-                    self.authorized = False
 
                 except RuntimeError as error:
-                    raise error
+                    raise error from error
                 except Exception:
+                    self.errors += 1
                     self.logger.exception("Unknown error")
                     await self.sleeper()
+                else:
+                    self.authorized = False
+                    self.errors = 0
 
 
-async def run_bot(tg_client: Client, proxy: str | None):
+async def run_bot(tg_client: Client, proxy: str | None) -> None:
     try:
         await CryptoBot(tg_client=tg_client).run(proxy=proxy)
-    except RuntimeError as error:
-        log.error(f"{tg_client.name} | Session error: {error!s}")
+    except RuntimeError:
+        log.bind(session_name=tg_client.name).exception("Session error")

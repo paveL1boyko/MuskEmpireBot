@@ -5,3 +5,4 @@ better-proxy==1.2.0
 loguru==0.7.2
 Pyrogram==2.0.106
 TgCrypto==1.2.5
+aiocache==0.12.2

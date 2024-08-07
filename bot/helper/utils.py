@@ -5,7 +5,6 @@ import random
 from collections.abc import Callable
 from functools import wraps
 from time import time
-from urllib.parse import parse_qsl, urlencode
 
 import aiohttp
 from loguru import logger
@@ -57,7 +56,7 @@ def handle_request(
                 response_data = await response.text()
             else:
                 response_data = await response.read()
-            return await func(self, response_data, **kwargs)
+            return await func(self, response_json=response_data, **kwargs)
 
         return wrapper
 
@@ -81,8 +80,6 @@ def error_handler(delay=3):
             try:
                 return await func(self, *args, **kwargs)
             except Exception as error:
-                self.errors += 1
-
                 self.logger.error(f"Error in {func.__name__}: {error}")
                 await asyncio.sleep(random.randint(delay, delay * 2))
                 raise
@@ -90,13 +87,3 @@ def error_handler(delay=3):
         return wrapper
 
     return decorator
-
-
-def encode_tg_web_data(tg_web_data: str, query_name: str = "query_id", additional_data: dict = None) -> dict:
-    parsed_query = dict(parse_qsl(tg_web_data))
-    parsed_query.pop(query_name, None)
-    user = parsed_query.pop("user")
-    if additional_data:
-        parsed_query.update(additional_data)
-
-    return f"user={user}&" + urlencode(parsed_query, doseq=True)

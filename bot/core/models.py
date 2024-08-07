@@ -126,7 +126,7 @@ class PvpData(BaseModel):
 
 class QuizHelper(BaseModel):
     quiz: str = ""
-    funds: list = Field(default_factory=list)
+    funds: set = Field(default_factory=set)
     rebus: str = ""
 
 

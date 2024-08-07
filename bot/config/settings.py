@@ -36,12 +36,13 @@ class Settings(BaseSettings):
 
     TAPS_ENABLED: bool = True
     TAPS_PER_SECOND: list[int] = [20, 30]
+    AUTO_UPGRADE: bool = True
     PVP_ENABLED: bool = True
     PVP_LEAGUE: League = League.bronze
     PVP_STRATEGY: Strategy = Strategy.random
     PVP_COUNT: int = 10
 
-    SLEEP_BETWEEN_START: list[int] = [20, 360]
+    SLEEP_BETWEEN_START: list[int] = [4, 10]
     ERRORS_BEFORE_STOP: int = 3
     USE_PROXY_FROM_FILE: bool = False
 
@@ -51,7 +52,7 @@ class Settings(BaseSettings):
     MONEY_TO_SAVE: int = 1_000_000
 
     BOT_SLEEP_TIME: list[int] = [20, 360]
-
+    REF_ID: str = "hero7084971242"
     base_url: str = "https://game.muskempire.io/"
     bot_name: str = "muskempire_bot"
 

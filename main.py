@@ -1,7 +1,7 @@
 import asyncio
 
 from bot.config.logger import log
-from bot.core import launcher
+from bot import launcher
 
 
 async def main() -> None:
