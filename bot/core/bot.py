@@ -211,38 +211,45 @@ class CryptoBot(CryptoBotApi):
 
     async def upgrade_hero(self) -> None:
         available_skill = list(self._get_available_skills())
-        if config.AUTO_UPGRADE_HERO:
-            await self._upgrade_hero_skill(available_skill)
         if config.AUTO_UPGRADE_MINING:
             await self._upgrade_mining_skill(available_skill)
+        if config.AUTO_UPGRADE_HERO:
+            await self._upgrade_hero_skill(available_skill)
 
     async def _upgrade_mining_skill(self, available_skill: list[DbSkill]) -> None:
         for skill in [skill for skill in available_skill if skill.category == "mining"]:
             if (
-                (self.balance - skill.skill_price) >= config.MONEY_TO_SAVE
-                and "energy_recovery" in skill.title
-                and skill.next_level <= config.MAX_MINING_ENERGY_UPGRADE_LEVEL
+                "energy_recovery" in skill.key
+                and skill.next_level <= config.MAX_MINING_ENERGY_RECOVERY_UPGRADE_LEVEL
                 or (
-                    skill.next_level < config.MAX_MINING_UPGRADE_LEVEL
-                    or skill.skill_price < config.MAX_MINING_UPGRADE_COSTS
+                    skill.next_level <= config.MAX_MINING_UPGRADE_LEVEL
+                    or skill.skill_price <= config.MAX_MINING_UPGRADE_COSTS
                 )
             ):
                 await self._upgrade_skill(skill)
 
+    def _is_enough_money_for_upgrade(self, skill: DbSkill) -> bool:
+        return (self.balance - skill.skill_price) >= config.MONEY_TO_SAVE
+
     async def _upgrade_hero_skill(self, available_skill: list[DbSkill]) -> None:
         for skill in sorted([skill for skill in available_skill if skill.weight], key=lambda x: x.weight, reverse=True):
-            if (self.balance - skill.skill_price) >= config.MONEY_TO_SAVE and skill.weight >= config.SKILL_WEIGHT:
+            if skill.weight >= config.SKILL_WEIGHT:
                 await self._upgrade_skill(skill)
 
     async def _upgrade_skill(self, skill: DbSkill) -> None:
-        await self.skills_improve(json_body={"data": skill.key})
-        self.logger.info(
-            f"Skill: <blue>{skill.title}</blue> upgraded to level: <cyan>{skill.next_level}</cyan> "
-            f"Profit: <yellow>{skill.skill_profit}</yellow> "
-            f"Costs: <blue>{skill.skill_price}</blue> "
-            f"Money stay: <yellow>{self.balance}</yellow> "
-            f"Skill weight <magenta>{skill.weight:.5f}</magenta>"
-        )
+        if self._is_enough_money_for_upgrade(skill):
+            try:
+                await self.skills_improve(json_body={"data": skill.key})
+                self.logger.info(
+                    f"Skill: <blue>{skill.title}</blue> upgraded to level: <cyan>{skill.next_level}</cyan> "
+                    f"Profit: <yellow>{skill.skill_profit}</yellow> "
+                    f"Costs: <blue>{skill.skill_price}</blue> "
+                    f"Money stay: <yellow>{self.balance}</yellow> "
+                    f"Skill weight <magenta>{skill.weight:.5f}</magenta>"
+                )
+            except ValueError:
+                self.logger.exception(f"Failed to upgrade skill: {skill}")
+                raise
         await self.sleeper()
 
     def _get_available_skills(self) -> Generator[DbSkill, None, None]:

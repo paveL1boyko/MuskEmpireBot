@@ -53,7 +53,7 @@ class Settings(BaseSettings):
 
     AUTO_UPGRADE_MINING: bool = True
     MAX_MINING_UPGRADE_LEVEL: int = 30
-    MAX_MINING_ENERGY_UPGRADE_LEVEL: int = 50
+    MAX_MINING_ENERGY_RECOVERY_UPGRADE_LEVEL: int = 50
     MAX_MINING_UPGRADE_COSTS: int = 5_000_000
 
     BOT_SLEEP_TIME: list[int] = [20, 360]
