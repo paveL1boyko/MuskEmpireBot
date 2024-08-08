@@ -50,7 +50,6 @@ class CryptoBot(CryptoBotApi):
     async def perform_taps(self, profile: Profile) -> None:
         self.logger.info("Taps started")
         energy = profile.energy
-        self.sleep_time = profile.energy / profile.money_per_tap
         while True:
             taps_per_second = random.randint(*config.TAPS_PER_SECOND)
             seconds = random.randint(5, 8)
@@ -349,7 +348,7 @@ class CryptoBot(CryptoBotApi):
 
                     await self.syn_hero_balance()
 
-                    sleep_time = self.sleep_time + random.randint(*config.RANDOM_SLEEP_TIME * 20)
+                    sleep_time = random.randint(*config.BOT_SLEEP_TIME)
                     self.logger.info(f"Sleep minutes {sleep_time // 60} minutes")
                     await asyncio.sleep(sleep_time)
 
