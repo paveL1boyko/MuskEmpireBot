@@ -68,6 +68,12 @@ class CryptoBot(CryptoBotApi):
                 self.temporary_stop_taps_time = time.monotonic() + 60 * 60 * 3
                 break
 
+    async def claim_all_executed_quest(self) -> None:
+        for i in self.user_profile.quests:
+            if not i["isRewarded"]:
+                await self.quest_reward_claim(json_body={"data": [i["key"], None]})
+                self.logger.info(f'Quest <green>{i["key"]}</green> claimed ')
+
     async def _perform_pvp(self, league: dict, strategy: str, count: int) -> None:
         self.logger.info(
             f"PvP negotiations started | League: <blue>{league['key']}</blue> | Strategy: <green>{strategy}</green>"
@@ -268,6 +274,8 @@ class CryptoBot(CryptoBotApi):
                         await self.upgrade_hero()
 
                     await self.claim_daily_reward()
+
+                    await self.claim_all_executed_quest()
 
                     await self.get_friend_reward()
 

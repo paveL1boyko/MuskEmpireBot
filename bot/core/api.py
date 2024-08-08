@@ -140,7 +140,7 @@ class CryptoBotApi:
 
     @error_handler()
     @handle_request("/quests/claim")
-    async def quest_reward(self, *, response_json: dict, json_body: dict) -> bool:
+    async def quest_reward_claim(self, *, response_json: dict, json_body: dict) -> bool:
         self._update_money_balanse(response_json)
         return True
 
@@ -158,7 +158,7 @@ class CryptoBotApi:
     @handle_request("/quests/check")
     async def solve_rebus(self, *, response_json: dict, json_body: dict) -> bool:
         await self.sleeper()
-        await self.quest_reward(json_body=json_body)
+        await self.quest_reward_claim(json_body=json_body)
 
     @error_handler()
     @handle_request("/friends/claim")
