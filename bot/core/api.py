@@ -151,7 +151,7 @@ class CryptoBotApi:
 
     @error_handler()
     @handle_request("/quests/daily/progress/all")
-    async def daily_quests(self, *, response_json: dict) -> dict:
+    async def all_daily_quests(self, *, response_json: dict) -> dict:
         return response_json["data"]
 
     @error_handler()

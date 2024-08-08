@@ -1,9 +1,13 @@
 import asyncio
+import json
 import math
 import random
+import re
 import time
 from collections.abc import Generator
 from datetime import datetime
+from functools import lru_cache
+from pathlib import Path
 
 import aiohttp
 from aiohttp_proxy import ProxyConnector
@@ -67,6 +71,31 @@ class CryptoBot(CryptoBotApi):
                 self.logger.warning(f"Taps stopped (<red>{e.message}</red>)")
                 self.temporary_stop_taps_time = time.monotonic() + 60 * 60 * 3
                 break
+
+    async def claim_daily_quest(self) -> None:
+        all_daily_quests = await self.all_daily_quests()
+        for key, value in all_daily_quests.items():
+            if (
+                value["type"] == "youtube"
+                and not value["isRewarded"]
+                and (code := self._try_to_get_code(value["description"].lower()))
+            ):
+                await self.daily_quest_reward(json_body={"data": {"quest": key, "code": str(code)}})
+                self.logger.info(f'Quest <green>{value["description"]}</green> claimed')
+            if not value["isRewarded"] and value["isComplete"] and not value["url"]:
+                await self.daily_quest_reward(json_body={"data": {"quest": key, "code": None}})
+                self.logger.info(f"Quest <green>{key}</green> claimed")
+
+    def _try_to_get_code(self, title: str) -> str | None:
+        codes = self._load_codes_from_files()
+        if video_code_title := re.search(r"эпизод\s*\d+", title):
+            return codes.get(video_code_title.group().replace(" ", ""), None)
+        return None
+
+    @lru_cache
+    def _load_codes_from_files(self):
+        with Path("youtube.json").open("r") as file:
+            return json.load(file)
 
     async def claim_all_executed_quest(self) -> None:
         for i in self.user_profile.quests:
@@ -181,35 +210,60 @@ class CryptoBot(CryptoBotApi):
             self.logger.warning("Database is missing. PvP negotiations will be skipped this time.")
 
     async def upgrade_hero(self) -> None:
-        skills = sorted(self._get_available_skills(), key=lambda x: x.weight, reverse=True)
-        for skill in skills:
-            if (self.balance - skill.skill_price) >= config.MONEY_TO_SAVE:
-                await self.skills_improve(json_body={"data": skill.key})
-                self.logger.info(
-                    f"Skill: <blue>{skill.title}</blue> upgraded to level: <cyan>{skill.next_level}</cyan> "
-                    f"Profit: <yellow>{skill.skill_profit}</yellow> "
-                    f"Costs: <blue>{skill.skill_price}</blue> "
-                    f"Money stay: <yellow>{self.balance}</yellow> "
-                    f"Skill weight <magenta>{skill.weight:.5f}</magenta>"
+        available_skill = list(self._get_available_skills())
+        if config.AUTO_UPGRADE_HERO:
+            await self._upgrade_hero_skill(available_skill)
+        if config.AUTO_UPGRADE_MINING:
+            await self._upgrade_mining_skill(available_skill)
+
+    async def _upgrade_mining_skill(self, available_skill: list[DbSkill]) -> None:
+        for skill in [skill for skill in available_skill if skill.category == "mining"]:
+            if (
+                (self.balance - skill.skill_price) >= config.MONEY_TO_SAVE
+                and "energy_recovery" in skill.title
+                and skill.next_level <= config.MAX_MINING_ENERGY_UPGRADE_LEVEL
+                or (
+                    skill.next_level < config.MAX_MINING_UPGRADE_LEVEL
+                    or skill.skill_price < config.MAX_MINING_UPGRADE_COSTS
                 )
-                await self.sleeper()
+            ):
+                await self._upgrade_skill(skill)
+
+    async def _upgrade_hero_skill(self, available_skill: list[DbSkill]) -> None:
+        for skill in sorted([skill for skill in available_skill if skill.weight], key=lambda x: x.weight, reverse=True):
+            if (self.balance - skill.skill_price) >= config.MONEY_TO_SAVE and skill.weight >= config.SKILL_WEIGHT:
+                await self._upgrade_skill(skill)
+
+    async def _upgrade_skill(self, skill: DbSkill) -> None:
+        await self.skills_improve(json_body={"data": skill.key})
+        self.logger.info(
+            f"Skill: <blue>{skill.title}</blue> upgraded to level: <cyan>{skill.next_level}</cyan> "
+            f"Profit: <yellow>{skill.skill_profit}</yellow> "
+            f"Costs: <blue>{skill.skill_price}</blue> "
+            f"Money stay: <yellow>{self.balance}</yellow> "
+            f"Skill weight <magenta>{skill.weight:.5f}</magenta>"
+        )
+        await self.sleeper()
 
     def _get_available_skills(self) -> Generator[DbSkill, None, None]:
         for skill in DbSkills(**self.dbs).dbSkills:
-            if self._is_available_to_upgrade(skill):
+            self._calkulate_skill_requirements(skill)
+            if self._is_available_to_upgrade_skills(skill):
                 yield skill
 
-    def _is_available_to_upgrade(self, skill: DbSkill) -> bool:
+    def _calkulate_skill_requirements(self, skill: DbSkill) -> None:
         skill.next_level = (
             self.user_profile.skills[skill.key]["level"] + 1 if self.user_profile.skills.get(skill.key) else 1
         )
         skill.skill_profit = skill.calculate_profit(skill.next_level)
         skill.skill_price = skill.price_for_level(skill.next_level)
         skill.weight = skill.skill_profit / skill.skill_price
+
+    def _is_available_to_upgrade_skills(self, skill: DbSkill) -> bool:
         # check the current skill is still in the process of improvement
-        if (finsh_time := self.user_profile.skills.get(skill.key, {}).get("finishUpgradeDate")) and datetime.now(
-            UTC
-        ) > datetime.strptime(finsh_time, "%Y-%m-%d %H:%M:%S").replace(tzinfo=UTC):
+        if (finsh_time := self.user_profile.skills.get(skill.key, {}).get("finishUpgradeDate")) and datetime.strptime(
+            finsh_time, "%Y-%m-%d %H:%M:%S"
+        ).replace(tzinfo=UTC) > datetime.now(UTC):
             return False
         skill_requirements = skill.get_level_by_skill_level(skill.next_level)
         if not skill_requirements:
@@ -218,7 +272,6 @@ class CryptoBot(CryptoBotApi):
             len(self.user_profile.friends) >= skill_requirements.requiredFriends
             and self.user_profile.level >= skill_requirements.requiredHeroLevel
             and self._is_can_learn_skill(skill_requirements)
-            and skill.weight >= config.SKILL_WEIGHT
         )
 
     def _is_can_learn_skill(self, level: SkillLevel) -> bool:
@@ -270,11 +323,10 @@ class CryptoBot(CryptoBotApi):
                     if config.PVP_ENABLED:
                         await self.starting_pvp()
 
-                    if config.AUTO_UPGRADE:
-                        await self.upgrade_hero()
+                    await self.upgrade_hero()
 
                     await self.claim_daily_reward()
-
+                    await self.claim_daily_quest()
                     await self.claim_all_executed_quest()
 
                     await self.get_friend_reward()

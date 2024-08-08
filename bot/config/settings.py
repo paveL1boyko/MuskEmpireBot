@@ -36,7 +36,7 @@ class Settings(BaseSettings):
 
     TAPS_ENABLED: bool = True
     TAPS_PER_SECOND: list[int] = [20, 30]
-    AUTO_UPGRADE: bool = True
+    AUTO_UPGRADE_HERO: bool = True
     PVP_ENABLED: bool = True
     PVP_LEAGUE: League = League.bronze
     PVP_STRATEGY: Strategy = Strategy.random
@@ -47,9 +47,14 @@ class Settings(BaseSettings):
     USE_PROXY_FROM_FILE: bool = False
 
     RANDOM_SLEEP_TIME: int = 5
-    SKILL_WEIGHT: float = 0.00005
+    SKILL_WEIGHT: float = 0
 
     MONEY_TO_SAVE: int = 1_000_000
+
+    AUTO_UPGRADE_MINING: bool = True
+    MAX_MINING_UPGRADE_LEVEL: int = 30
+    MAX_MINING_ENERGY_UPGRADE_LEVEL: int = 50
+    MAX_MINING_UPGRADE_COSTS: int = 5_000_000
 
     BOT_SLEEP_TIME: list[int] = [20, 360]
     REF_ID: str = "hero7084971242"
