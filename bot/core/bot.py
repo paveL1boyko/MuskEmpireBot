@@ -277,7 +277,8 @@ class CryptoBot(CryptoBotApi):
         if not skill_requirements:
             return True
         return (
-            len(self.user_profile.friends) >= skill_requirements.requiredFriends
+            skill.maxLevel >= skill.next_level
+            and len(self.user_profile.friends) >= skill_requirements.requiredFriends
             and self.user_profile.level >= skill_requirements.requiredHeroLevel
             and self._is_can_learn_skill(skill_requirements)
         )
