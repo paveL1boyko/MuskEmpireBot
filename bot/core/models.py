@@ -1,6 +1,8 @@
+from datetime import datetime
 from typing import Any
 
 from pydantic import AliasPath, BaseModel, Field, field_validator
+from pytz import UTC
 
 from bot.core.upgrader import Calculator
 
@@ -36,6 +38,7 @@ class DbSkill(BaseModel):
     skill_profit: int = 0
     skill_price: int = 0
     weight: int = 0
+    progress_time: datetime | None = None
 
     def __init__(self, /, **data: Any) -> None:
         super().__init__(**data)
@@ -59,6 +62,11 @@ class DbSkill(BaseModel):
 
     def price_for_level(self, level: int) -> int:
         return self._calculator.get_price(self, level)
+
+    def get_skill_time(self, user_profile: "ProfileData") -> None | datetime:
+        if finish_time := user_profile.skills.get(self.key, {}).get("finishUpgradeDate"):
+            return datetime.strptime(finish_time, "%Y-%m-%d %H:%M:%S").replace(tzinfo=UTC)
+        return None
 
 
 class DbSkills(BaseModel):

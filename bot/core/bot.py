@@ -26,7 +26,7 @@ class CryptoBot(CryptoBotApi):
         super().__init__(tg_client)
         self.temporary_stop_taps_time = 0
         self.bet_calculator = BetCounter(self)
-        self.authorized_time = -config.LOGIN_TIMEOUT
+        self.authorized = False
         self.sleep_time = config.BOT_SLEEP_TIME
 
     async def claim_daily_reward(self) -> None:
@@ -244,12 +244,11 @@ class CryptoBot(CryptoBotApi):
         skill.skill_profit = skill.calculate_profit(skill.next_level)
         skill.skill_price = skill.price_for_level(skill.next_level)
         skill.weight = skill.skill_profit / skill.skill_price
+        skill.progress_time = skill.get_skill_time(self.user_profile)
 
     def _is_available_to_upgrade_skills(self, skill: DbSkill) -> bool:
         # check the current skill is still in the process of improvement
-        if (finsh_time := self.user_profile.skills.get(skill.key, {}).get("finishUpgradeDate")) and datetime.strptime(
-            finsh_time, "%Y-%m-%d %H:%M:%S"
-        ).replace(tzinfo=UTC) > datetime.now(UTC):
+        if skill.progress_time and skill.progress_time.timestamp() + 60 > datetime.now(UTC).timestamp():
             return False
         skill_requirements = skill.get_level_by_skill_level(skill.next_level)
         if not skill_requirements:
@@ -272,9 +271,14 @@ class CryptoBot(CryptoBotApi):
         return False
 
     async def login_to_app(self, proxy: str | None) -> bool:
+        if self.authorized:
+            return True
         tg_web_data = await self.get_tg_web_data(proxy=proxy)
         self.http_client.headers["Api-Key"] = tg_web_data.hash
-        return await self.login(json_body=tg_web_data.request_data)
+        if await self.login(json_body=tg_web_data.request_data):
+            self.authorized = True
+            return True
+        return False
 
     async def run(self, proxy: str | None) -> None:
         proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
@@ -291,10 +295,7 @@ class CryptoBot(CryptoBotApi):
                     self.logger.error("Bot stopped (too many errors)")
                     break
                 try:
-                    if time.monotonic() > self.authorized_time + config.LOGIN_TIMEOUT:
-                        await self.login_to_app(proxy)
-                        self.authorized_time = time.monotonic()
-
+                    if await self.login_to_app(proxy):
                         self.dbs = await self.get_dbs()
 
                         self.user_profile: ProfileData = await self.get_profile_full()
@@ -338,6 +339,7 @@ class CryptoBot(CryptoBotApi):
                     await self.sleeper()
                 else:
                     self.errors = 0
+                    self.authorized = False
 
 
 async def run_bot(tg_client: Client, proxy: str | None) -> None:

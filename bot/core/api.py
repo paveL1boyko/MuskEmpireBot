@@ -114,7 +114,7 @@ class CryptoBotApi:
     @error_handler()
     @handle_request("/hero/balance/sync", json_body={"data": {}})
     async def syn_hero_balance(self, *, response_json: dict) -> Profile:
-        self._update_money_balanse(response_json)
+        self._update_money_balance(response_json)
         self.logger.info(
             f"Level: <blue>{self.level}</blue> | "
             f"Balance: <yellow>{self.balance}</yellow> | "
@@ -130,24 +130,24 @@ class CryptoBotApi:
     @error_handler()
     @handle_request("/hero/bonus/offline/claim")
     async def get_offline_bonus(self, *, response_json: dict) -> None:
-        self._update_money_balanse(response_json)
+        self._update_money_balance(response_json)
         self.logger.success(f"Offline bonus claimed: <yellow>+{self.user_profile.offline_bonus}</yellow>")
 
     @error_handler()
     @handle_request("/quests/daily/claim")
     async def daily_reward(self, *, response_json: dict, json_body: dict) -> None:
-        self._update_money_balanse(response_json)
+        self._update_money_balance(response_json)
 
     @error_handler()
     @handle_request("/quests/claim")
     async def quest_reward_claim(self, *, response_json: dict, json_body: dict) -> bool:
-        self._update_money_balanse(response_json)
+        self._update_money_balance(response_json)
         return True
 
     @error_handler()
     @handle_request("/quests/daily/progress/claim")
     async def daily_quest_reward(self, *, response_json: dict, json_body: dict) -> None:
-        self._update_money_balanse(response_json)
+        self._update_money_balance(response_json)
 
     @error_handler()
     @handle_request("/quests/daily/progress/all")
@@ -163,14 +163,14 @@ class CryptoBotApi:
     @error_handler()
     @handle_request("/friends/claim")
     async def friend_reward(self, *, response_json: dict, json_body: dict) -> None:
-        self._update_money_balanse(response_json)
+        self._update_money_balance(response_json)
 
     @error_handler()
     @handle_request("/hero/action/tap")
     async def api_perform_taps(self, *, response_json: dict, json_body: dict) -> int:
         if (error_msg := response_json.get("error")) and "take some rest" in error_msg:
             raise TapsError(error_msg)
-        self._update_money_balanse(response_json)
+        self._update_money_balance(response_json)
         return int(response_json["data"]["hero"]["earns"]["task"]["energy"])
 
     @cached(ttl=3 * 60 * 60, cache=Cache.MEMORY)
@@ -204,12 +204,12 @@ class CryptoBotApi:
     @handle_request("/pvp/claim")
     async def get_pvp_claim(self, *, response_json: dict) -> None:
         if response_json.get("success"):
-            self._update_money_balanse(response_json)
+            self._update_money_balance(response_json)
 
     @error_handler()
     @handle_request("/fund/invest")
     async def invest(self, *, response_json: dict, json_body: dict) -> None:
-        data = self._update_money_balanse(response_json)
+        data = self._update_money_balance(response_json)
         for fnd in data["funds"]:
             if fnd["fundKey"] == json_body["data"]["fund"]:
                 money = fnd["moneyProfit"]
@@ -220,17 +220,17 @@ class CryptoBotApi:
     @error_handler()
     @handle_request("/skills/improve")
     async def skills_improve(self, *, response_json: dict, json_body: dict) -> None:
-        self._update_money_balanse(response_json)
+        self._update_money_balance(response_json)
 
     async def check_proxy(self, proxy: Proxy) -> None:
         try:
-            response = await self.http_client.get(url="https://httpbin.org/ip", timeout=aiohttp.ClientTimeout(5))
+            response = await self.http_client.get(url="https://httpbin.org/ip", timeout=aiohttp.ClientTimeout(10))
             ip = (await response.json()).get("origin")
             self.logger.info(f"Proxy IP: {ip}")
         except Exception:
             self.logger.exception(f"Proxy: {proxy}")
 
-    def _update_money_balanse(self, response_json: dict) -> dict:
+    def _update_money_balance(self, response_json: dict) -> dict:
         response_json = response_json["data"]
         self.balance = int(response_json["hero"]["money"])
         self.level = int(response_json["hero"]["level"])
