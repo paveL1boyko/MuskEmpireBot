@@ -43,7 +43,7 @@ async def register_sessions() -> None:
 
 def get_proxies() -> [str | None]:
     if config.USE_PROXY_FROM_FILE:
-        with Path("proxies.txt").open() as file:
+        with Path("proxies.txt").open(encoding="utf-8") as file:
             return [Proxy.from_str(proxy=row.strip()).as_url for row in file if row.strip()]
     return [None]
 
@@ -73,7 +73,9 @@ async def run_bot_with_delay(tg_client: Client, proxy: str | None) -> None:
 
 
 async def run_clients(tg_clients: list[Client]) -> None:
-    proxy_cycle = cycle(get_proxies())
+    proxies = get_proxies()
+    log.info(f"Start {len(proxies)} sessions")
+    proxy_cycle = cycle(proxies)
     await asyncio.gather(
         *[run_bot_with_delay(tg_client=tg_client, proxy=next(proxy_cycle)) for tg_client in tg_clients]
     )
