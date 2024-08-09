@@ -4,6 +4,7 @@ import random
 import time
 from collections.abc import Generator
 from datetime import datetime
+from enum import Enum
 
 import aiohttp
 from aiohttp_proxy import ProxyConnector
@@ -101,7 +102,8 @@ class CryptoBot(CryptoBotApi):
             if strategy == "random":
                 current_strategy = random.choice(self.strategies)
             self.logger.info("Searching opponent...")
-            json_data = {"data": {"league": league["key"], "strategy": current_strategy.value}}
+            current_strategy = current_strategy.value if isinstance(current_strategy, Enum) else current_strategy
+            json_data = {"data": {"league": league["key"], "strategy": current_strategy}}
             response_json = await self.get_pvp_fight(json_body=json_data)
             if response_json is None:
                 await self.sleeper(delay=10, additional_delay=5)
