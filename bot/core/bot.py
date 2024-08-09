@@ -1,13 +1,9 @@
 import asyncio
-import json
 import math
 import random
-import re
 import time
 from collections.abc import Generator
 from datetime import datetime
-from functools import lru_cache
-from pathlib import Path
 
 import aiohttp
 from aiohttp_proxy import ProxyConnector
@@ -22,6 +18,7 @@ from .api import CryptoBotApi
 from .bet_counter import BetCounter
 from .errors import TapsError
 from .models import DbSkill, DbSkills, Profile, ProfileData, QuizHelper, SkillLevel
+from .utils import try_to_get_code
 
 
 class CryptoBot(CryptoBotApi):
@@ -71,24 +68,13 @@ class CryptoBot(CryptoBotApi):
             if (
                 value["type"] == "youtube"
                 and not value["isRewarded"]
-                and (code := self._try_to_get_code(value["description"].lower()))
+                and (code := try_to_get_code(value["description"]))
             ):
                 await self.daily_quest_reward(json_body={"data": {"quest": key, "code": str(code)}})
                 self.logger.info(f'Quest <green>{value["description"]}</green> claimed')
             if not value["isRewarded"] and value["isComplete"] and not value["url"]:
                 await self.daily_quest_reward(json_body={"data": {"quest": key, "code": None}})
                 self.logger.info(f"Quest <green>{key}</green> claimed")
-
-    def _try_to_get_code(self, title: str) -> str | None:
-        codes = self._load_codes_from_files()
-        if video_code_title := re.search(r"эпизод\s*\d+", title):
-            return codes.get(video_code_title.group().replace(" ", ""), None)
-        return None
-
-    @lru_cache
-    def _load_codes_from_files(self):
-        with Path("youtube.json").open("r") as file:
-            return json.load(file)
 
     async def claim_all_executed_quest(self) -> None:
         for i in self.user_profile.quests:
