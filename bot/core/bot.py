@@ -8,6 +8,7 @@ from enum import Enum
 
 import aiohttp
 from aiohttp_proxy import ProxyConnector
+from aiohttp_socks import ProxyConnector as SocksConnector
 from pyrogram import Client
 from pytz import UTC
 
@@ -284,7 +285,9 @@ class CryptoBot(CryptoBotApi):
         return False
 
     async def run(self, proxy: str | None) -> None:
-        proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
+        proxy_conn = None
+        if proxy:
+            proxy_conn = SocksConnector().from_url(proxy) if "soks" in proxy else ProxyConnector().from_url(proxy)
 
         async with aiohttp.ClientSession(
             headers=headers, connector=proxy_conn, timeout=aiohttp.ClientTimeout(30)
