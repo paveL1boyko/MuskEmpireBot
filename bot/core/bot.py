@@ -33,19 +33,11 @@ class CryptoBot(CryptoBotApi):
         self.sleep_time = config.BOT_SLEEP_TIME
 
     async def claim_daily_reward(self) -> None:
-        daily_index = None
         for day, status in self.user_profile.daily_rewards.items():
             if status == "canTake":
-                daily_index = day
-                break
-        if daily_index is not None:
-            self.logger.info("Daily reward available")
-            daily_claimed = await self.daily_reward(json_body={"data": str(daily_index)})
-            if daily_claimed:
+                await self.daily_reward(json_body={"data": str(day)})
                 self.logger.success("Daily reward claimed")
-                self.errors = 0
-        else:
-            self.logger.info("Daily reward not available")
+                return
 
     async def perform_taps(self, profile: Profile) -> None:
         self.logger.info("Taps started")
@@ -73,7 +65,7 @@ class CryptoBot(CryptoBotApi):
                 self.temporary_stop_taps_time = time.monotonic() + 60 * 60 * 3
                 break
 
-    async def claim_daily_quest(self) -> None:
+    async def execute_and_claim_daily_quest(self) -> None:
         all_daily_quests = await self.all_daily_quests()
         for key, value in all_daily_quests.items():
             if (
@@ -337,7 +329,8 @@ class CryptoBot(CryptoBotApi):
                     await self.upgrade_hero()
 
                     await self.claim_daily_reward()
-                    await self.claim_daily_quest()
+
+                    await self.execute_and_claim_daily_quest()
                     await self.claim_all_executed_quest()
 
                     await self.get_friend_reward()
