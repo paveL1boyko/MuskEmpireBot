@@ -58,7 +58,7 @@ class Settings(BaseSettings):
     MAX_MINING_ENERGY_RECOVERY_UPGRADE_LEVEL: int = 50
     MAX_MINING_UPGRADE_COSTS: int = 5_000_000
 
-    BOT_SLEEP_TIME: list[int] = [20, 360]
+    BOT_SLEEP_TIME: list[int] = [2000, 3500]
     REF_ID: str = "hero7092030432"
     base_url: str = "https://game.muskempire.io/"
     bot_name: str = "muskempire_bot"
