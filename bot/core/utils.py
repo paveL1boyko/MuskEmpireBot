@@ -15,6 +15,6 @@ def try_to_get_code(title: str) -> str | None:
 
 
 @lru_cache
-def _load_codes_from_files():
-    with Path("youtube.json").open("r") as file:
+def _load_codes_from_files() -> dict:
+    with Path("youtube.json").open("r", encoding="utf-8") as file:
         return json.load(file)
