@@ -26,7 +26,7 @@ class CryptoBot(CryptoBotApi):
         super().__init__(tg_client)
         self.temporary_stop_taps_time = 0
         self.bet_calculator = BetCounter(self)
-        self.authorized = False
+        self.authorized_time = -config.LOGIN_TIMEOUT
         self.sleep_time = config.BOT_SLEEP_TIME
 
     async def claim_daily_reward(self) -> None:
@@ -272,14 +272,9 @@ class CryptoBot(CryptoBotApi):
         return False
 
     async def login_to_app(self, proxy: str | None) -> bool:
-        if self.authorized:
-            return True
         tg_web_data = await self.get_tg_web_data(proxy=proxy)
         self.http_client.headers["Api-Key"] = tg_web_data.hash
-        if await self.login(json_body=tg_web_data.request_data):
-            self.authorized = True
-            return True
-        return False
+        return await self.login(json_body=tg_web_data.request_data)
 
     async def run(self, proxy: str | None) -> None:
         proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
@@ -296,14 +291,15 @@ class CryptoBot(CryptoBotApi):
                     self.logger.error("Bot stopped (too many errors)")
                     break
                 try:
-                    if await self.login_to_app(proxy):
+                    if time.monotonic() > self.authorized_time + config.LOGIN_TIMEOUT:
+                        await self.login_to_app(proxy)
+                        self.authorized_time = time.monotonic()
+
                         self.dbs = await self.get_dbs()
 
                         self.user_profile: ProfileData = await self.get_profile_full()
                         if self.user_profile.offline_bonus > 0:
                             await self.get_offline_bonus()
-                    else:
-                        continue
 
                     profile = await self.syn_hero_balance()
 
@@ -341,7 +337,6 @@ class CryptoBot(CryptoBotApi):
                     self.logger.exception("Unknown error")
                     await self.sleeper()
                 else:
-                    self.authorized = False
                     self.errors = 0
 
 

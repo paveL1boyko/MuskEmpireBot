@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     API_ID: int
     API_HASH: str
 
+    LOGIN_TIMEOUT: int = 3600
+
     TAPS_ENABLED: bool = True
     TAPS_PER_SECOND: list[int] = [20, 30]
     AUTO_UPGRADE_HERO: bool = True
