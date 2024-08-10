@@ -338,6 +338,7 @@ class CryptoBot(CryptoBotApi):
                     raise error from error
                 except Exception:
                     self.errors += 1
+                    self.authorized = False
                     self.logger.exception("Unknown error")
                     await self.sleeper()
                 else:
