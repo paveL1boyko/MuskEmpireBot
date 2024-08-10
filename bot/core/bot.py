@@ -8,7 +8,6 @@ from enum import Enum
 
 import aiohttp
 from aiohttp_proxy import ProxyConnector
-from aiohttp_socks import ProxyConnector as SocksConnector
 from pyrogram import Client
 from pytz import UTC
 
@@ -194,10 +193,10 @@ class CryptoBot(CryptoBotApi):
 
     async def upgrade_hero(self) -> None:
         available_skill = list(self._get_available_skills())
-        if config.AUTO_UPGRADE_MINING:
-            await self._upgrade_mining_skill(available_skill)
         if config.AUTO_UPGRADE_HERO:
             await self._upgrade_hero_skill(available_skill)
+        if config.AUTO_UPGRADE_MINING:
+            await self._upgrade_mining_skill(available_skill)
 
     async def _upgrade_mining_skill(self, available_skill: list[DbSkill]) -> None:
         for skill in [skill for skill in available_skill if skill.category == "mining"]:
@@ -285,9 +284,7 @@ class CryptoBot(CryptoBotApi):
         return False
 
     async def run(self, proxy: str | None) -> None:
-        proxy_conn = None
-        if proxy:
-            proxy_conn = SocksConnector().from_url(proxy) if "soks" in proxy else ProxyConnector().from_url(proxy)
+        proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
 
         async with aiohttp.ClientSession(
             headers=headers, connector=proxy_conn, timeout=aiohttp.ClientTimeout(30)
