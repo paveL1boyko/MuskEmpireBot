@@ -330,6 +330,8 @@ class CryptoBot(CryptoBotApi):
 
                     await self.syn_hero_balance()
 
+                    await self.upgrade_hero()
+
                     sleep_time = random.randint(*config.BOT_SLEEP_TIME)
                     self.logger.info(f"Sleep minutes {sleep_time // 60} minutes")
                     await asyncio.sleep(sleep_time)
@@ -340,7 +342,7 @@ class CryptoBot(CryptoBotApi):
                     self.errors += 1
                     self.authorized = False
                     self.logger.exception("Unknown error")
-                    await self.sleeper()
+                    await self.sleeper(additional_delay=10)
                 else:
                     self.errors = 0
                     self.authorized = False
