@@ -312,7 +312,6 @@ class CryptoBot(CryptoBotApi):
                     if config.PVP_ENABLED:
                         await self.starting_pvp()
                     self.data_after = await self.user_data_after()
-                    await self.upgrade_hero()
 
                     await self.claim_daily_reward()
 
