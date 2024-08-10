@@ -31,7 +31,7 @@ class CryptoBot(CryptoBotApi):
         self.sleep_time = config.BOT_SLEEP_TIME
 
     async def claim_daily_reward(self) -> None:
-        for day, status in self.user_profile.daily_rewards.items():
+        for day, status in self.data_after.daily_rewards.items():
             if status == "canTake":
                 await self.daily_reward(json_body={"data": str(day)})
                 self.logger.success("Daily reward claimed")
@@ -78,7 +78,7 @@ class CryptoBot(CryptoBotApi):
                 self.logger.info(f"Quest <green>{key}</green> claimed")
 
     async def claim_all_executed_quest(self) -> None:
-        for i in self.user_profile.quests:
+        for i in self.data_after.quests:
             if not i["isRewarded"]:
                 await self.quest_reward_claim(json_body={"data": [i["key"], None]})
                 self.logger.info(f'Quest <green>{i["key"]}</green> claimed ')
@@ -136,7 +136,7 @@ class CryptoBot(CryptoBotApi):
         self.logger.info(f"PvP negotiations finished. {money_str}")
 
     async def get_friend_reward(self) -> None:
-        unrewarded_friends = [friend for friend in self.user_profile.friends if friend["bonusToTake"] > 0]
+        unrewarded_friends = [friend for friend in self.data_after.friends if friend["bonusToTake"] > 0]
         if unrewarded_friends:
             self.logger.info("Reward for friends available")
             for friend in unrewarded_friends:
@@ -150,7 +150,7 @@ class CryptoBot(CryptoBotApi):
                 self.logger.info(f"Was solved <green>{quest['title']}</green>")
 
     def _is_event_solved(self, quest_key: str) -> bool:
-        return any(i["key"] == quest_key for i in self.user_profile.quests)
+        return any(i["key"] == quest_key for i in self.data_after.quests)
 
     async def set_funds(self, helper: QuizHelper) -> None:
         if helper.funds:
@@ -242,12 +242,12 @@ class CryptoBot(CryptoBotApi):
 
     def _calkulate_skill_requirements(self, skill: DbSkill) -> None:
         skill.next_level = (
-            self.user_profile.skills[skill.key]["level"] + 1 if self.user_profile.skills.get(skill.key) else 1
+            self.data_after.skills[skill.key]["level"] + 1 if self.data_after.skills.get(skill.key) else 1
         )
         skill.skill_profit = skill.calculate_profit(skill.next_level)
         skill.skill_price = skill.price_for_level(skill.next_level)
         skill.weight = skill.skill_profit / skill.skill_price
-        skill.progress_time = skill.get_skill_time(self.user_profile)
+        skill.progress_time = skill.get_skill_time(self.data_after)
 
     def _is_available_to_upgrade_skills(self, skill: DbSkill) -> bool:
         # check the current skill is still in the process of improvement
@@ -258,7 +258,7 @@ class CryptoBot(CryptoBotApi):
             return True
         return (
             skill.maxLevel >= skill.next_level
-            and len(self.user_profile.friends) >= skill_requirements.requiredFriends
+            and len(self.data_after.friends) >= skill_requirements.requiredFriends
             and self.user_profile.level >= skill_requirements.requiredHeroLevel
             and self._is_can_learn_skill(skill_requirements)
         )
@@ -267,9 +267,9 @@ class CryptoBot(CryptoBotApi):
         if not level.requiredSkills:
             return True
         for skill, level in level.requiredSkills.items():
-            if skill not in self.user_profile.skills:
+            if skill not in self.data_after.skills:
                 return False
-            if self.user_profile.skills[skill]["level"] >= level:
+            if self.data_after.skills[skill]["level"] >= level:
                 return True
         return False
 
@@ -311,7 +311,7 @@ class CryptoBot(CryptoBotApi):
 
                     if config.PVP_ENABLED:
                         await self.starting_pvp()
-
+                    self.data_after = await self.user_data_after()
                     await self.upgrade_hero()
 
                     await self.claim_daily_reward()

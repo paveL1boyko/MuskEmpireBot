@@ -63,8 +63,8 @@ class DbSkill(BaseModel):
     def price_for_level(self, level: int) -> int:
         return self._calculator.get_price(self, level)
 
-    def get_skill_time(self, user_profile: "ProfileData") -> None | datetime:
-        if finish_time := user_profile.skills.get(self.key, {}).get("finishUpgradeDate"):
+    def get_skill_time(self, data_after: "UserDataAfter") -> None | datetime:
+        if finish_time := data_after.skills.get(self.key, {}).get("finishUpgradeDate"):
             return datetime.strptime(finish_time, "%Y-%m-%d %H:%M:%S").replace(tzinfo=UTC)
         return None
 
@@ -79,6 +79,9 @@ class ProfileData(BaseModel):
     level: int = Field(validation_alias=AliasPath("hero", "level"))
     money_per_hour: int = Field(validation_alias=AliasPath("hero", "moneyPerHour"))
     offline_bonus: int = Field(validation_alias=AliasPath("hero", "offlineBonus"))
+
+
+class UserDataAfter(BaseModel):
     daily_rewards: dict = Field(validation_alias=AliasPath("dailyRewards"))
     quests: list = Field(validation_alias=AliasPath("quests"))
     friends: list = Field(validation_alias=AliasPath("friends"))
