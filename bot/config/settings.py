@@ -59,7 +59,7 @@ class Settings(BaseSettings):
     MAX_MINING_UPGRADE_COSTS: int = 5_000_000
 
     BOT_SLEEP_TIME: list[int] = [2000, 3500]
-    REF_ID: str = "hero7092030432"
+    REF_ID: str = "hero6695971335"
     base_url: str = "https://game.muskempire.io/"
     bot_name: str = "muskempire_bot"
 
