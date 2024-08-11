@@ -157,11 +157,11 @@ class CryptoBot(CryptoBotApi):
             await self.get_pvp_claim()
             self.pvp_count -= 1
             await self.sleeper()
-            money_str = (
-                f"Profit: +{money}"
-                if money > 0
-                else (f"Loss: {money}" if money < 0 else "Profit: 0")
-            )
+        money_str = (
+            f"Profit: +{money}"
+            if money > 0
+            else (f"Loss: {money}" if money < 0 else "Profit: 0")
+        )
         self.logger.info(f"PvP negotiations finished. {money_str}")
         self.pvp_count = 0
 
