@@ -135,7 +135,7 @@ class CryptoBot(CryptoBotApi):
             await self.sleeper()
         money_str = f"Profit: +{money}" if money > 0 else (f"Loss: {money}" if money < 0 else "Profit: 0")
         self.logger.info(f"PvP negotiations finished. {money_str}")
-        self.pvp_count = 0
+        self.pvp_count = config.PVP_COUNT
 
     async def get_friend_reward(self) -> None:
         unrewarded_friends = [friend for friend in self.data_after.friends if friend["bonusToTake"] > 0]
