@@ -19,7 +19,7 @@ start_text = """
 
 
 def get_session_names() -> list[str]:
-    return [file.stem for file in Path("sessions").glob("*.session")]
+    return [file.stem for file in sorted(Path("sessions").glob("*.session"))]
 
 
 async def register_sessions() -> None:
