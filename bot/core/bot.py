@@ -133,8 +133,12 @@ class CryptoBot(CryptoBotApi):
             await self.get_pvp_claim()
             self.pvp_count -= 1
             await self.sleeper()
-        money_str = f"Profit: +{money}" if money > 0 else (f"Loss: {money}" if money < 0 else "Profit: 0")
-        self.logger.info(f"PvP negotiations finished. {money_str}")
+
+        self.logger.info(
+            "Total money after all pvp:" + "<i><green>+{money}</green></i>"
+            if money >= 0
+            else f"<i><red>{money}</red></i>"
+        )
         self.pvp_count = config.PVP_COUNT
 
     async def get_friend_reward(self) -> None:
@@ -318,6 +322,7 @@ class CryptoBot(CryptoBotApi):
                     profile = await self.syn_hero_balance()
 
                     config.MONEY_TO_SAVE = self.bet_calculator.max_bet()
+                    self.logger.info(f"Max bet for funds saved: <yellow>{config.MONEY_TO_SAVE}</yellow>")
 
                     self.data_after = await self.user_data_after()
 

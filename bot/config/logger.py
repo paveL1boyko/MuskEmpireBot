@@ -4,6 +4,12 @@ from loguru import logger
 
 logger.remove()
 
+logger.level("DEBUG", color="<blue>")
+logger.level("INFO", color="<green>")
+logger.level("WARNING", color="<yellow>")
+logger.level("ERROR", color="<red>")
+logger.level("CRITICAL", color="<bg #FF0000><white>")
+
 logger_str_format = (
     "<white>{time:YYYY-MM-DD HH:mm:ss}</white> | "
     "<level>{level: <8}</level> | "
