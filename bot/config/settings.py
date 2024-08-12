@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     SLEEP_BETWEEN_START: list[int] = [4, 20]
     ERRORS_BEFORE_STOP: int = 3
     USE_PROXY_FROM_FILE: bool = False
+    ADD_LOCAL_MACHINE_AS_IP: bool = False
 
     RANDOM_SLEEP_TIME: int = 5
     SKILL_WEIGHT: float = 0

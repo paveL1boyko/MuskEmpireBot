@@ -49,9 +49,7 @@ async def register_sessions() -> None:
 def get_proxies() -> [str | None]:
     if config.USE_PROXY_FROM_FILE:
         with Path("proxies.txt").open(encoding="utf-8") as file:
-            return [
-                Proxy.from_str(proxy=row.strip()).as_url for row in file if row.strip()
-            ]
+            return [Proxy.from_str(proxy=row.strip()).as_url for row in file if row.strip()]
     return None
 
 
@@ -82,24 +80,19 @@ async def run_bot_with_delay(tg_client: Client, proxy: str | None) -> None:
 
 async def run_clients(tg_clients: list[Client]) -> None:
     proxies = get_proxies() or [None]
+    if config.ADD_LOCAL_MACHINE_AS_IP:
+        proxies.append(None)
     proxy_cycle = cycle(proxies)
     await asyncio.gather(
-        *[
-            run_bot_with_delay(tg_client=tg_client, proxy=next(proxy_cycle))
-            for tg_client in tg_clients
-        ]
+        *[run_bot_with_delay(tg_client=tg_client, proxy=next(proxy_cycle)) for tg_client in tg_clients]
     )
 
 
 async def start() -> None:
     print(logo)
     parser = ArgumentParser()
-    parser.add_argument(
-        "-a", "--action", type=int, choices=[1, 2], help="Action to perform  (1 or 2)"
-    )
-    log.info(
-        f"Detected {len(get_session_names())} sessions | {len(proxy) if (proxy := get_proxies()) else 0} proxies"
-    )
+    parser.add_argument("-a", "--action", type=int, choices=[1, 2], help="Action to perform  (1 or 2)")
+    log.info(f"Detected {len(get_session_names())} sessions | {len(proxy) if (proxy := get_proxies()) else 0} proxies")
     action = parser.parse_args().action
 
     if not action:
