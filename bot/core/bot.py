@@ -135,9 +135,8 @@ class CryptoBot(CryptoBotApi):
             await self.sleeper()
 
         self.logger.info(
-            "Total money after all pvp:" + "<i><green>+{money}</green></i>"
-            if money >= 0
-            else f"<i><red>{money}</red></i>"
+            "Total money after all pvp:"
+            + (f"<i><green>+{money}</green></i>" if money >= 0 else f"<i><red>{money}</red></i>")
         )
         self.pvp_count = config.PVP_COUNT
 
@@ -241,10 +240,10 @@ class CryptoBot(CryptoBotApi):
                     f"Money stay: <yellow>{self.balance}</yellow> "
                     f"Skill weight <magenta>{skill.weight:.5f}</magenta>"
                 )
+                await self.sleeper()
             except ValueError:
                 self.logger.exception(f"Failed to upgrade skill: {skill}")
                 raise
-        await self.sleeper()
 
     def _get_available_skills(self) -> Generator[DbSkill, None, None]:
         for skill in DbSkills(**self.dbs).dbSkills:
