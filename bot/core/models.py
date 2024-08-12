@@ -4,7 +4,7 @@ from typing import Any
 from pydantic import AliasPath, BaseModel, Field, field_validator
 from pytz import UTC
 
-from bot.core.upgrader import Calculator
+from bot.core.api_js_helpers.upgrader import Calculator
 
 
 class SkillLevel(BaseModel):
@@ -135,10 +135,8 @@ class PvpData(BaseModel):
     fight: Fight | None
 
 
-class QuizHelper(BaseModel):
-    quiz: str = ""
+class FundHelper(BaseModel):
     funds: set = Field(default_factory=set)
-    rebus: str = ""
 
 
 class Skills(BaseModel):

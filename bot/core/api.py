@@ -18,7 +18,7 @@ from bot.config.settings import config
 from bot.helper.utils import error_handler, handle_request
 
 from .errors import TapsError
-from .models import Profile, ProfileData, PvpData, QuizHelper, UserDataAfter
+from .models import FundHelper, Profile, ProfileData, PvpData, UserDataAfter
 
 
 class TgWebData(NamedTuple):
@@ -184,10 +184,8 @@ class CryptoBotApi:
     @handle_request(
         "https://alexell.pro/crypto/x-empire/data.json", full_url=True, method="GET", json_body={"data": {}}
     )
-    async def get_helper(self, *, response_json: dict) -> QuizHelper | dict:
-        if response_json.get(str(datetime.now(UTC).date())):
-            return QuizHelper(**response_json.get(str(datetime.now(UTC).date())))
-        return {}
+    async def get_helper(self, *, response_json: dict) -> FundHelper | dict:
+        return FundHelper(**response_json.get(str(datetime.now(UTC).date()), {}))
 
     @error_handler()
     @handle_request("/fund/info")

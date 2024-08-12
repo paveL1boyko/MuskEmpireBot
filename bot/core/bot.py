@@ -16,7 +16,7 @@ from bot.config.logger import log
 from bot.config.settings import Strategy, config
 
 from .api import CryptoBotApi
-from .bet_counter import BetCounter
+from bot.core.api_js_helpers.bet_counter import BetCounter
 from .errors import TapsError
 from .models import DbSkill, DbSkills, Profile, ProfileData, SkillLevel
 from .utils import try_to_get_code
@@ -155,10 +155,11 @@ class CryptoBot(CryptoBotApi):
         return any(i["key"] == quest_key for i in self.data_after.quests)
 
     async def set_funds(self) -> None:
-        if (helper := await self.get_helper()) and helper.funds:
+        helper_data = await self.get_helper()
+        if helper_data.funds:
             current_invest = await self.get_funds_info()
             already_funded = {i["fundKey"] for i in current_invest["funds"]}
-            for fund in list(helper.funds - already_funded)[: 3 - len(already_funded)]:
+            for fund in list(helper_data.funds - already_funded)[: 3 - len(already_funded)]:
                 if self.balance > (amount := self.bet_calculator.calculate_bet()):
                     await self.invest(json_body={"data": {"fund": fund, "money": amount}})
                 else:

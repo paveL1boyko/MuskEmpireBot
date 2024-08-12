@@ -1,16 +1,17 @@
 import json
-import re
 from functools import lru_cache
 from pathlib import Path
 
 
 def try_to_get_code(title: str) -> str | None:
-    title = title.lower()
+    title = title.lower().replace(" ", "")
     codes = _load_codes_from_files()
-    if video_code_title := re.search(r"эпизод\s*\d+", title):
-        return codes.get(video_code_title.group().replace(" ", ""), None)
-    if "бутерин" in title:
-        return codes.get("бутерин", None)
+    ordered_keyes = sorted(
+        codes, key=lambda x: int(key) if (key := "".join(x for x in x if x.isdigit())) else 0, reverse=True
+    )
+    for key in ordered_keyes:
+        if key in title:
+            return codes.get(key, None)
     return None
 
 
