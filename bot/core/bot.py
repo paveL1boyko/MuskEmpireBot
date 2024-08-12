@@ -14,9 +14,9 @@ from pytz import UTC
 from bot.config.headers import headers
 from bot.config.logger import log
 from bot.config.settings import Strategy, config
+from bot.core.api_js_helpers.bet_counter import BetCounter
 
 from .api import CryptoBotApi
-from bot.core.api_js_helpers.bet_counter import BetCounter
 from .errors import TapsError
 from .models import DbSkill, DbSkills, Profile, ProfileData, SkillLevel
 from .utils import try_to_get_code

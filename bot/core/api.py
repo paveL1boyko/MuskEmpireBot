@@ -60,7 +60,7 @@ class CryptoBotApi:
                 except (Unauthorized, UserDeactivated, AuthKeyUnregistered) as error:
                     raise RuntimeError(str(error)) from error
 
-            peer = await self.tg_client.resolve_peer("muskempire_bot")
+            peer = await self.tg_client.resolve_peer(config.bot_name)
 
             web_view = await self.tg_client.invoke(
                 RequestAppWebView(

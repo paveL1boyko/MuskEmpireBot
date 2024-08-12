@@ -62,7 +62,7 @@ class Settings(BaseSettings):
     BOT_SLEEP_TIME: list[int] = [2000, 3500]
     REF_ID: str = "hero6695971335"
     base_url: str = "https://game.muskempire.io/"
-    bot_name: str = "muskempire_bot"
+    bot_name: str = "empirebot"
 
 
 config = Settings()
