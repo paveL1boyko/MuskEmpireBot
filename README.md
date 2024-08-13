@@ -6,7 +6,7 @@
 
 # Бот для [Musk Empire](https://t.me/muskempire_bot/game?startapp=hero6695971335)
 
-![img1](.github/images/start.jpg)
+![img1](.github/images/start.png)
 
 # Делает все
 1. Решает ребусы загадки
