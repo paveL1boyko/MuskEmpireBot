@@ -66,10 +66,10 @@ class Settings(BaseSettings):
         "{'success': False, 'error': 'invalid key improve_discipline'}",
     )
 
+    BOT_SLEEP_TIME: list[int] = [2000, 3500]
+    REF_ID: str = "hero6695971335"
+    base_url: str = "https://game.muskempire.io/"
+    bot_name: str = "empirebot"
 
-BOT_SLEEP_TIME: list[int] = [2000, 3500]
-REF_ID: str = "hero6695971335"
-base_url: str = "https://game.muskempire.io/"
-bot_name: str = "empirebot"
 
 config = Settings()
