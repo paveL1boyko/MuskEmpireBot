@@ -60,7 +60,7 @@ class Settings(BaseSettings):
     MAX_MINING_ENERGY_RECOVERY_UPGRADE_LEVEL: int = 38
     MAX_MINING_UPGRADE_COSTS: int = 5_000_000
 
-    SKIP_IMPROVE_DISCIPLINE_BUG = Field(
+    SKIP_IMPROVE_DISCIPLINE_BUG: bool = Field(
         default=False,
         description="Skip improve discipline bug for eror "
         "{'success': False, 'error': 'invalid key improve_discipline'}",
