@@ -23,7 +23,7 @@ def _load_codes_from_files() -> dict:
         return json.load(file)
 
 
-def num_prettier(num):
+def num_prettier(num: int) -> str:
     number = abs(num)
     if number >= (comparer := 1e12):
         prettier_num = f"{number / comparer:.1f}T"

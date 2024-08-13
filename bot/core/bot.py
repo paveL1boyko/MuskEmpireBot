@@ -19,7 +19,7 @@ from bot.core.api_js_helpers.bet_counter import BetCounter
 from .api import CryptoBotApi
 from .errors import TapsError
 from .models import DbSkill, DbSkills, Profile, ProfileData, SkillLevel
-from .utils import try_to_get_code, num_prettier
+from .utils import num_prettier, try_to_get_code
 
 
 class CryptoBot(CryptoBotApi):
@@ -104,9 +104,7 @@ class CryptoBot(CryptoBotApi):
                     if money >= 0
                     else f"Loss: <red>-{num_prettier(money)}</red>"
                 )
-                self.logger.info(
-                    f"PvP negotiations stopped (<red>not enough money</red>). Pvp profit: {num_prettier(money_str)}"
-                )
+                self.logger.info(f"PvP negotiations stopped (<red>not enough money</red>). Pvp profit: {money_str}")
                 break
 
             if strategy == "random":
