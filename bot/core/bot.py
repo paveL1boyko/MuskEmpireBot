@@ -84,6 +84,8 @@ class CryptoBot(CryptoBotApi):
     async def claim_all_executed_quest(self) -> None:
         for i in self.data_after.quests:
             if not i["isRewarded"]:
+                if config.SKIP_IMPROVE_DISCIPLINE_BUG and i["key"] == "improve_discipline":
+                    continue
                 await self.quest_reward_claim(json_body={"data": [i["key"], None]})
                 self.logger.info(f'Quest <green>{i["key"]}</green> claimed ')
 

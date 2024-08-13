@@ -1,5 +1,6 @@
 from enum import Enum
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logo = """
@@ -59,10 +60,16 @@ class Settings(BaseSettings):
     MAX_MINING_ENERGY_RECOVERY_UPGRADE_LEVEL: int = 38
     MAX_MINING_UPGRADE_COSTS: int = 5_000_000
 
-    BOT_SLEEP_TIME: list[int] = [2000, 3500]
-    REF_ID: str = "hero6695971335"
-    base_url: str = "https://game.muskempire.io/"
-    bot_name: str = "empirebot"
+    SKIP_IMPROVE_DISCIPLINE_BUG = Field(
+        default=False,
+        description="Skip improve discipline bug for eror "
+        "{'success': False, 'error': 'invalid key improve_discipline'}",
+    )
 
+
+BOT_SLEEP_TIME: list[int] = [2000, 3500]
+REF_ID: str = "hero6695971335"
+base_url: str = "https://game.muskempire.io/"
+bot_name: str = "empirebot"
 
 config = Settings()
