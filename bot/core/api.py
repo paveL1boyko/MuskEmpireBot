@@ -19,6 +19,7 @@ from bot.helper.utils import error_handler, handle_request
 
 from .errors import TapsError
 from .models import FundHelper, Profile, ProfileData, PvpData, UserDataAfter
+from .utils import num_prettier
 
 
 class TgWebData(NamedTuple):
@@ -117,8 +118,8 @@ class CryptoBotApi:
         self._update_money_balance(response_json)
         self.logger.info(
             f"Level: <blue>{self.level}</blue> | "
-            f"Balance: <yellow>{self.balance}</yellow> | "
-            f"Money per hour: <green>{self.mph}</green>"
+            f"Balance: <yellow>{num_prettier(self.balance)}</yellow> | "
+            f"Money per hour: <green>{num_prettier(self.mph)}</green>"
         )
         return Profile(**response_json["data"])
 
@@ -136,7 +137,7 @@ class CryptoBotApi:
     @handle_request("/hero/bonus/offline/claim")
     async def get_offline_bonus(self, *, response_json: dict) -> None:
         self._update_money_balance(response_json)
-        self.logger.success(f"Offline bonus claimed: <yellow>+{self.user_profile.offline_bonus}</yellow>")
+        self.logger.success(f"Offline bonus claimed: <yellow>+{num_prettier(self.user_profile.offline_bonus)}</yellow>")
 
     @error_handler()
     @handle_request("/quests/daily/claim")

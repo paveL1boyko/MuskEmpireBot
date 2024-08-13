@@ -19,7 +19,7 @@ from bot.core.api_js_helpers.bet_counter import BetCounter
 from .api import CryptoBotApi
 from .errors import TapsError
 from .models import DbSkill, DbSkills, Profile, ProfileData, SkillLevel
-from .utils import try_to_get_code
+from .utils import try_to_get_code, num_prettier
 
 
 class CryptoBot(CryptoBotApi):
@@ -60,7 +60,7 @@ class CryptoBot(CryptoBotApi):
                 }
                 energy = await self.api_perform_taps(json_body=json_data)
                 self.logger.success(
-                    f"Earned money: <yellow>+{earned_money}</yellow> | Energy left: <blue>{energy}</blue>"
+                    f"Earned money: <yellow>+{num_prettier(earned_money)}</yellow> | Energy left: <blue>{num_prettier(energy)}</blue>"
                 )
             except TapsError as e:
                 self.logger.warning(f"Taps stopped (<red>{e.message}</red>)")
@@ -99,8 +99,14 @@ class CryptoBot(CryptoBotApi):
         money = 0
         while self.pvp_count > 0:
             if self.balance < int(league["maxContract"]):
-                money_str = f"Profit: <yellow>+{money}</yellow>" if money >= 0 else f"Loss: <red>-{money}</red>"
-                self.logger.info(f"PvP negotiations stopped (<red>not enough money</red>). Pvp profit: {money_str}")
+                money_str = (
+                    f"Profit: <yellow>+{num_prettier(money)}</yellow>"
+                    if money >= 0
+                    else f"Loss: <red>-{num_prettier(money)}</red>"
+                )
+                self.logger.info(
+                    f"PvP negotiations stopped (<red>not enough money</red>). Pvp profit: {num_prettier(money_str)}"
+                )
                 break
 
             if strategy == "random":
@@ -119,12 +125,12 @@ class CryptoBot(CryptoBotApi):
             )
             if fight.winner == self.user_profile.user_id:
                 money += fight.moneyProfit
-                log_part = f"You <green>WIN</green> (<yellow>+{fight.moneyProfit})</yellow>"
+                log_part = f"You <green>WIN</green> (<yellow>+{num_prettier(fight.moneyProfit)})</yellow>"
             else:
                 money -= fight.moneyContract
-                log_part = f"You <red>LOSE</red> (<yellow>-{fight.moneyProfit}</yellow>)"
+                log_part = f"You <red>LOSE</red> (<yellow>-{num_prettier(fight.moneyProfit)}</yellow>)"
             self.logger.success(
-                f"Contract sum: <yellow>{fight.moneyContract}</yellow> | "
+                f"Contract sum: <yellow>{num_prettier(fight.moneyContract)}</yellow> | "
                 f"Your strategy: <cyan>{current_strategy}</cyan> | "
                 f"Opponent strategy: <blue>{opponent_strategy}</blue> | "
                 f"{log_part}"
@@ -136,7 +142,11 @@ class CryptoBot(CryptoBotApi):
 
         self.logger.info(
             "Total money after all pvp:"
-            + (f"<i><green>+{money}</green></i>" if money >= 0 else f"<i><red>{money}</red></i>")
+            + (
+                f"<i><green>+{num_prettier(money)}</green></i>"
+                if money >= 0
+                else f"<i><red>{num_prettier(money)}</red></i>"
+            )
         )
         self.pvp_count = config.PVP_COUNT
 
@@ -164,6 +174,7 @@ class CryptoBot(CryptoBotApi):
             already_funded = {i["fundKey"] for i in current_invest["funds"]}
             for fund in list(helper_data.funds - already_funded)[: 3 - len(already_funded)]:
                 if self.balance > (amount := self.bet_calculator.calculate_bet()):
+                    self.logger.info(f"Investing <yellow>{num_prettier(amount)}</yellow> to  fund <blue>{fund}</blue>")
                     await self.invest(json_body={"data": {"fund": fund, "money": amount}})
                 else:
                     self.logger.info("Not enough money for invest")
@@ -235,9 +246,9 @@ class CryptoBot(CryptoBotApi):
                 await self.skills_improve(json_body={"data": skill.key})
                 self.logger.info(
                     f"Skill: <blue>{skill.title}</blue> upgraded to level: <cyan>{skill.next_level}</cyan> "
-                    f"Profit: <yellow>{skill.skill_profit}</yellow> "
-                    f"Costs: <blue>{skill.skill_price}</blue> "
-                    f"Money stay: <yellow>{self.balance}</yellow> "
+                    f"Profit: <yellow>{num_prettier(skill.skill_profit)}</yellow> "
+                    f"Costs: <blue>{num_prettier(skill.skill_price)}</blue> "
+                    f"Money stay: <yellow>{num_prettier(self.balance)}</yellow> "
                     f"Skill weight <magenta>{skill.weight:.5f}</magenta>"
                 )
                 await self.sleeper()
@@ -321,7 +332,7 @@ class CryptoBot(CryptoBotApi):
                     profile = await self.syn_hero_balance()
 
                     config.MONEY_TO_SAVE = self.bet_calculator.max_bet()
-                    self.logger.info(f"Max bet for funds saved: <yellow>{config.MONEY_TO_SAVE}</yellow>")
+                    self.logger.info(f"Max bet for funds saved: <yellow>{num_prettier(config.MONEY_TO_SAVE)}</yellow>")
 
                     self.data_after = await self.user_data_after()
 
