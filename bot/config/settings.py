@@ -65,7 +65,7 @@ class Settings(BaseSettings):
         description="Skip improve discipline bug for eror "
         "{'success': False, 'error': 'invalid key improve_discipline'}",
     )
-    SKIP_TO_UPGRADE_SKILLS: list[str] = Field(
+    SKIP_TO_UPGRADE_SKILLS: list = Field(
         default=list, description='Skip upgrade skills. For example: ["Уборщик", "Рекрутер,HR"]'
     )
 
