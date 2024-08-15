@@ -7,3 +7,4 @@ Pyrogram==2.0.106
 TgCrypto==1.2.5
 aiocache==0.12.2
 pytz==2024.1
+fake-useragent==1.5.1
