@@ -23,13 +23,14 @@ from .utils import num_prettier, try_to_get_code
 
 
 class CryptoBot(CryptoBotApi):
-    def __init__(self, tg_client: Client):
+    def __init__(self, tg_client: Client, additional_data: dict) -> None:
         super().__init__(tg_client)
         self.temporary_stop_taps_time = 0
         self.bet_calculator = BetCounter(self)
         self.pvp_count = config.PVP_COUNT
         self.authorized = False
         self.sleep_time = config.BOT_SLEEP_TIME
+        self.additional_data = additional_data
 
     async def claim_daily_reward(self) -> None:
         for day, status in self.data_after.daily_rewards.items():
@@ -311,7 +312,7 @@ class CryptoBot(CryptoBotApi):
         proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
 
         async with aiohttp.ClientSession(
-            headers=headers,
+            headers=headers | self.additional_data,
             connector=proxy_conn,
             timeout=aiohttp.ClientTimeout(30),
         ) as http_client:
@@ -375,8 +376,8 @@ class CryptoBot(CryptoBotApi):
                     self.authorized = False
 
 
-async def run_bot(tg_client: Client, proxy: str | None) -> None:
+async def run_bot(tg_client: Client, proxy: str | None, additional_data: dict) -> None:
     try:
-        await CryptoBot(tg_client=tg_client).run(proxy=proxy)
+        await CryptoBot(tg_client=tg_client, additional_data=additional_data).run(proxy=proxy)
     except RuntimeError:
         log.bind(session_name=tg_client.name).exception("Session error")

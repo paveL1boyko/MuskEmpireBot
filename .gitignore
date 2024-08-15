@@ -110,3 +110,4 @@ Thumbs.db
 # Virtual Studio Code, more commonly
 .vs/
 /sessions/
+/session_profile.json

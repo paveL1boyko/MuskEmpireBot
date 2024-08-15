@@ -3,6 +3,7 @@ import random
 from argparse import ArgumentParser
 from itertools import cycle
 from pathlib import Path
+from typing import NamedTuple
 
 from better_proxy import Proxy
 from pyrogram import Client
@@ -10,12 +11,18 @@ from pyrogram import Client
 from bot.config.logger import log
 from bot.config.settings import config, logo
 from bot.core.bot import run_bot
+from bot.utils import get_session_profiles
 
 start_text = """
     Select an action:
         1. Create session
         2. Run bot
     """
+
+
+class SessionData(NamedTuple):
+    tg_client: Client
+    session_data: dict
 
 
 def get_session_names() -> list[str]:
@@ -53,38 +60,44 @@ def get_proxies() -> [str | None]:
     return None
 
 
-async def get_tg_clients() -> list[Client]:
+async def get_tg_clients() -> list[SessionData]:
     session_names = get_session_names()
 
     if not session_names:
         msg = "Not found session files"
         raise FileNotFoundError(msg)
-
+    session_profiles = get_session_profiles(session_names)
     return [
-        Client(
-            name=session_name,
-            api_id=config.API_ID,
-            api_hash=config.API_HASH,
-            workdir="sessions/",
+        SessionData(
+            tg_client=Client(
+                name=session_name,
+                api_id=config.API_ID,
+                api_hash=config.API_HASH,
+                workdir="sessions/",
+            ),
+            session_data=session_profiles[session_name],
         )
         for session_name in session_names
     ]
 
 
-async def run_bot_with_delay(tg_client: Client, proxy: str | None) -> None:
+async def run_bot_with_delay(tg_client: Client, proxy: str | None, additional_data: dict) -> None:
     delay = random.randint(*config.SLEEP_BETWEEN_START)
     log.bind(session_name=tg_client.name).info(f"Wait {delay} seconds before start")
     await asyncio.sleep(delay)
-    await run_bot(tg_client=tg_client, proxy=proxy)
+    await run_bot(tg_client=tg_client, proxy=proxy, additional_data=additional_data)
 
 
-async def run_clients(tg_clients: list[Client]) -> None:
+async def run_clients(session_data: list[SessionData]) -> None:
     proxies = get_proxies() or [None]
     if config.ADD_LOCAL_MACHINE_AS_IP:
         proxies.append(None)
     proxy_cycle = cycle(proxies)
     await asyncio.gather(
-        *[run_bot_with_delay(tg_client=tg_client, proxy=next(proxy_cycle)) for tg_client in tg_clients]
+        *[
+            run_bot_with_delay(tg_client=s_data.tg_client, proxy=next(proxy_cycle), additional_data=s_data.session_data)
+            for s_data in session_data
+        ]
     )
 
 
@@ -107,5 +120,5 @@ async def start() -> None:
     if action == 1:
         await register_sessions()
     elif action == 2:
-        tg_clients = await get_tg_clients()
-        await run_clients(tg_clients=tg_clients)
+        session_data = await get_tg_clients()
+        await run_clients(session_data=session_data)
