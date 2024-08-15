@@ -161,12 +161,14 @@ class CryptoBot(CryptoBotApi):
     async def solve_quiz_and_rebus(self) -> None:
         for quest in self.dbs["dbQuests"]:
             quest_key = quest["key"]
+            if not self.data_after.quests:
+                continue
             if any(i in quest_key for i in ("riddle", "rebus")) and not self._is_event_solved(quest_key):
                 await self.solve_rebus(json_body={"data": [quest_key, quest["checkData"]]})
                 self.logger.info(f"Was solved <green>{quest['title']}</green>")
 
     def _is_event_solved(self, quest_key: str) -> bool:
-        return any(i["key"] == quest_key for i in self.data_after.quests)
+        return self.data_after.quests and any(i["key"] == quest_key for i in self.data_after.quests)
 
     async def set_funds(self) -> None:
         helper_data = await self.get_helper()
@@ -341,7 +343,7 @@ class CryptoBot(CryptoBotApi):
 
                     await self.claim_daily_reward()
 
-                    await self.execute_and_claim_daily_quest()
+                    # await self.execute_and_claim_daily_quest()
 
                     await self.get_friend_reward()
 
