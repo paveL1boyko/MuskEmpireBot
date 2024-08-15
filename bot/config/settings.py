@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     PVP_STRATEGY: Strategy = Strategy.random
     PVP_COUNT: int = 10
 
-    SLEEP_BETWEEN_START: list[int] = [4, 20]
+    SLEEP_BETWEEN_START: list[int] = [10, 50]
     ERRORS_BEFORE_STOP: int = 3
     USE_PROXY_FROM_FILE: bool = False
     ADD_LOCAL_MACHINE_AS_IP: bool = False
@@ -64,6 +64,9 @@ class Settings(BaseSettings):
         default=False,
         description="Skip improve discipline bug for eror "
         "{'success': False, 'error': 'invalid key improve_discipline'}",
+    )
+    SKIP_TO_UPGRADE_SKILLS: list[str] = Field(
+        default=list, description='Skip upgrade skills. For example: ["Уборщик", "Рекрутер,HR"]'
     )
 
     BOT_SLEEP_TIME: list[int] = [2000, 3500]
