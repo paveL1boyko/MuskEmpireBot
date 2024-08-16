@@ -161,7 +161,7 @@ class CryptoBot(CryptoBotApi):
     async def solve_quiz_and_rebus(self) -> None:
         for quest in self.dbs["dbQuests"]:
             quest_key = quest["key"]
-            if not self.data_after.quests:
+            if quest["requiredLevel"] > self.user_profile.level:
                 continue
             if any(i in quest_key for i in ("riddle", "rebus")) and not self._is_event_solved(quest_key):
                 await self.solve_rebus(json_body={"data": [quest_key, quest["checkData"]]})
