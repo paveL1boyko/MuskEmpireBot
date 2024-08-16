@@ -222,7 +222,7 @@ class CryptoBot(CryptoBotApi):
     async def _upgrade_mining_skill(self, available_skill: list[DbSkill]) -> None:
         for skill in [skill for skill in available_skill if skill.category == "mining"]:
             if (
-                "energy_recovery" in skill.key
+                skill.key in config.MINING_ENERGY_SKILLS
                 and skill.next_level <= config.MAX_MINING_ENERGY_RECOVERY_UPGRADE_LEVEL
                 or (
                     skill.next_level <= config.MAX_MINING_UPGRADE_LEVEL
