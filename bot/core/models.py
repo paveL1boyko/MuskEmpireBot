@@ -211,3 +211,8 @@ if __name__ == "__main__":
         "opponent": None,
     }
     PvpData(**data)
+
+
+class SessionData(BaseModel):
+    user_agent: str = Field(validation_alias="User-Agent")
+    proxy: str | None = None

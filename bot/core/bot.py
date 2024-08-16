@@ -18,7 +18,7 @@ from bot.core.api_js_helpers.bet_counter import BetCounter
 
 from .api import CryptoBotApi
 from .errors import TapsError
-from .models import DbSkill, DbSkills, Profile, ProfileData, SkillLevel
+from .models import DbSkill, DbSkills, Profile, ProfileData, SessionData, SkillLevel
 from .utils import num_prettier, try_to_get_code
 
 
@@ -30,7 +30,7 @@ class CryptoBot(CryptoBotApi):
         self.pvp_count = config.PVP_COUNT
         self.authorized = False
         self.sleep_time = config.BOT_SLEEP_TIME
-        self.additional_data = additional_data
+        self.additional_data: SessionData = SessionData.model_validate(additional_data[0])
 
     async def claim_daily_reward(self) -> None:
         for day, status in self.data_after.daily_rewards.items():
@@ -311,10 +311,10 @@ class CryptoBot(CryptoBotApi):
         return False
 
     async def run(self, proxy: str | None) -> None:
-        proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
+        proxy_conn = ProxyConnector().from_url(proxy or self.additional_data.proxy) if proxy else None
 
         async with aiohttp.ClientSession(
-            headers=headers | self.additional_data,
+            headers=headers | {"User-Agent": self.additional_data.user_agent},
             connector=proxy_conn,
             timeout=aiohttp.ClientTimeout(30),
         ) as http_client:
@@ -343,7 +343,7 @@ class CryptoBot(CryptoBotApi):
 
                     await self.claim_daily_reward()
 
-                    # await self.execute_and_claim_daily_quest()
+                    await self.execute_and_claim_daily_quest()
 
                     await self.get_friend_reward()
 
