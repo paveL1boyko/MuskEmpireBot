@@ -69,7 +69,7 @@ class Settings(BaseSettings):
     SKIP_TO_UPGRADE_SKILLS: list = Field([], description='Skip upgrade skills. For example: ["Уборщик", "Рекрутер,HR"]')
 
     BOT_SLEEP_TIME: list[int] = [2000, 3500]
-    REF_ID: str = "hero7092030432"
+    REF_ID: str = "hero1990239375"
     base_url: str = "https://game.muskempire.io/"
     bot_name: str = "empirebot"
 
