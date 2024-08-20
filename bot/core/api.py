@@ -184,7 +184,7 @@ class CryptoBotApi:
     @error_handler()
     @handle_request("https://alexell.pro/crypto/x-empire/data.php", full_url=True, json_body={})
     async def get_helper(self, *, response_json: dict) -> FundHelper | dict:
-        return FundHelper(**response_json.get(str(datetime.now(UTC).date()), {}))
+        return FundHelper(**response_json["result"].get(str(datetime.now(UTC).date()), {}))
 
     @error_handler()
     @handle_request("/fund/info")
