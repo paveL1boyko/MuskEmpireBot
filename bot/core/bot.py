@@ -282,12 +282,13 @@ class CryptoBot(CryptoBotApi):
         # check the current skill is still in the process of improvement
         if skill.progress_time and skill.progress_time.timestamp() + 60 > datetime.now(UTC).timestamp():
             return False
+        if skill.next_level > skill.maxLevel:
+            return False
         skill_requirements = skill.get_level_by_skill_level(skill.next_level)
         if not skill_requirements:
             return True
         return (
-            skill.maxLevel >= skill.next_level
-            and len(self.data_after.friends) >= skill_requirements.requiredFriends
+            len(self.data_after.friends) >= skill_requirements.requiredFriends
             and self.user_profile.level >= skill_requirements.requiredHeroLevel
             and self._is_can_learn_skill(skill_requirements)
         )
@@ -353,7 +354,7 @@ class CryptoBot(CryptoBotApi):
                     if config.TAPS_ENABLED and profile.energy and time.monotonic() > self.temporary_stop_taps_time:
                         await self.perform_taps(profile)
 
-                    await self.set_funds()
+                    # await self.set_funds()
                     await self.solve_quiz_and_rebus()
 
                     await self.claim_all_executed_quest()
