@@ -353,7 +353,7 @@ class CryptoBot(CryptoBotApi):
                     if config.TAPS_ENABLED and profile.energy and time.monotonic() > self.temporary_stop_taps_time:
                         await self.perform_taps(profile)
 
-                    await self.set_funds()
+                    # await self.set_funds()
                     await self.solve_quiz_and_rebus()
 
                     await self.claim_all_executed_quest()
