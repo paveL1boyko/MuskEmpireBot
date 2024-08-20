@@ -319,7 +319,7 @@ class CryptoBot(CryptoBotApi):
         async with aiohttp.ClientSession(
             headers=headers,
             connector=proxy_conn,
-            timeout=aiohttp.ClientTimeout(30),
+            timeout=aiohttp.ClientTimeout(total=60),
         ) as http_client:
             self.http_client = http_client
             if proxy:
