@@ -7,7 +7,7 @@ from datetime import datetime
 from enum import Enum
 
 import aiohttp
-from aiohttp_proxy import ProxyConnector
+from aiohttp_socks import ProxyConnector
 from pyrogram import Client
 from pytz import UTC
 
@@ -314,7 +314,7 @@ class CryptoBot(CryptoBotApi):
 
     async def run(self, proxy: str | None) -> None:
         proxy = proxy or self.additional_data.proxy
-        proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
+        proxy_conn = ProxyConnector.from_url(proxy) if proxy else None
 
         async with aiohttp.ClientSession(
             headers=headers,
