@@ -182,9 +182,7 @@ class CryptoBotApi:
 
     @cached(ttl=3 * 60 * 60, cache=Cache.MEMORY)
     @error_handler()
-    @handle_request(
-        "https://alexell.pro/crypto/x-empire/data.json", full_url=True, method="GET", json_body={"data": {}}
-    )
+    @handle_request("https://alexell.pro/crypto/x-empire/data.php", full_url=True, json_body={})
     async def get_helper(self, *, response_json: dict) -> FundHelper | dict:
         return FundHelper(**response_json.get(str(datetime.now(UTC).date()), {}))
 

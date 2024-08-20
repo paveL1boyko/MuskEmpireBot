@@ -30,7 +30,9 @@ class CryptoBot(CryptoBotApi):
         self.pvp_count = config.PVP_COUNT
         self.authorized = False
         self.sleep_time = config.BOT_SLEEP_TIME
-        self.additional_data: SessionData = SessionData.model_validate(additional_data[0])
+        self.additional_data: SessionData = SessionData.model_validate(
+            {k: v for d in additional_data for k, v in d.items()}
+        )
 
     async def claim_daily_reward(self) -> None:
         for day, status in self.data_after.daily_rewards.items():
@@ -311,10 +313,11 @@ class CryptoBot(CryptoBotApi):
         return False
 
     async def run(self, proxy: str | None) -> None:
-        proxy_conn = ProxyConnector().from_url(proxy or self.additional_data.proxy) if proxy else None
+        proxy = proxy or self.additional_data.proxy
+        proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
 
         async with aiohttp.ClientSession(
-            headers=headers | {"User-Agent": self.additional_data.user_agent},
+            headers=headers,
             connector=proxy_conn,
             timeout=aiohttp.ClientTimeout(30),
         ) as http_client:
