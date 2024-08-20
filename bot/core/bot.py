@@ -375,7 +375,7 @@ class CryptoBot(CryptoBotApi):
                     self.errors += 1
                     self.authorized = False
                     self.logger.exception("Unknown error")
-                    await self.sleeper(additional_delay=10)
+                    await self.sleeper(additional_delay=self.errors * 8)
                 else:
                     self.errors = 0
                     self.authorized = False

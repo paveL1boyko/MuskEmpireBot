@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     PVP_COUNT: int = 10
 
     SLEEP_BETWEEN_START: list[int] = [10, 50]
-    ERRORS_BEFORE_STOP: int = 3
+    ERRORS_BEFORE_STOP: int = 5
     USE_PROXY_FROM_FILE: bool = False
     ADD_LOCAL_MACHINE_AS_IP: bool = False
 
