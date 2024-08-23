@@ -1,4 +1,5 @@
 import asyncio
+import json
 import random
 from datetime import datetime
 from typing import NamedTuple
@@ -180,11 +181,14 @@ class CryptoBotApi:
         self.tapped_today = data.get("tappedToday", 0)
         return int(data["hero"]["earns"]["task"]["energy"])
 
-    @cached(ttl=3 * 60 * 60, cache=Cache.MEMORY)
+    @cached(ttl=6 * 60 * 60, cache=Cache.MEMORY)
     @error_handler()
-    @handle_request("https://alexell.pro/crypto/x-empire/data.php", full_url=True, json_body={})
-    async def get_helper(self, *, response_json: dict) -> FundHelper | dict:
-        return FundHelper(**response_json["result"].get(str(datetime.now(UTC).date()), {}))
+    @handle_request(
+        "https://raw.githubusercontent.com/testingstrategy/musk_daily/main/daily.json", method="GET", full_url=True
+    )
+    async def get_helper(self, *, response_json: str) -> FundHelper | dict:
+        response_json = json.loads(response_json)
+        return FundHelper(**response_json.get(str(datetime.now(UTC).date()), {}))
 
     @error_handler()
     @handle_request("/fund/info")
