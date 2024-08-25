@@ -351,9 +351,9 @@ class CryptoBot(CryptoBotApi):
 
                     self.data_after = await self.user_data_after()
 
-                    await self.claim_daily_reward()
+                    # await self.claim_daily_reward()
 
-                    await self.execute_and_claim_daily_quest()
+                    # await self.execute_and_claim_daily_quest()
 
                     await self.get_friend_reward()
 
