@@ -188,7 +188,7 @@ class CryptoBotApi:
     )
     async def get_helper(self, *, response_json: str) -> FundHelper | dict:
         response_json = json.loads(response_json)
-        return FundHelper(**response_json.get(str(datetime.now(UTC).date()), {}))
+        return FundHelper(funds=response_json.get(str(datetime.now(UTC).date()), {}).get('funds', {}), **response_json)
 
     @error_handler()
     @handle_request("/fund/info")
@@ -212,6 +212,23 @@ class CryptoBotApi:
     async def get_pvp_claim(self, *, response_json: dict) -> None:
         if response_json.get("success"):
             self._update_money_balance(response_json)
+
+    @error_handler()
+    @handle_request(
+        "/settings/save",
+        json_body={
+            "data": {
+                "id": None,
+                "music": False,
+                "sound": True,
+                "vibrate": True,
+                "animations": True,
+                "darkTheme": True,
+                "lang": "en",
+            }
+        },
+    )
+    async def sent_eng_settings(self, *, response_json: dict) -> None: ...
 
     @error_handler()
     @handle_request("/fund/invest")

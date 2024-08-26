@@ -137,6 +137,7 @@ class PvpData(BaseModel):
 
 class FundHelper(BaseModel):
     funds: set = Field(default_factory=set)
+    youtube: dict
 
 
 class Skills(BaseModel):

@@ -20,7 +20,7 @@ from bot.core.api_js_helpers.bet_counter import BetCounter
 from .api import CryptoBotApi
 from .errors import TapsError
 from .models import DbSkill, DbSkills, Profile, ProfileData, SessionData, SkillLevel
-from .utils import num_prettier, try_to_get_code
+from .utils import num_prettier, load_codes_from_files
 
 
 class CryptoBot(CryptoBotApi):
@@ -30,6 +30,7 @@ class CryptoBot(CryptoBotApi):
         self.bet_calculator = BetCounter(self)
         self.pvp_count = config.PVP_COUNT
         self.authorized = False
+        self.settings_was_set = False
         self.sleep_time = config.BOT_SLEEP_TIME
         self.additional_data: SessionData = SessionData.model_validate(
             {k: v for d in additional_data for k, v in d.items()}
@@ -72,12 +73,14 @@ class CryptoBot(CryptoBotApi):
                 break
 
     async def execute_and_claim_daily_quest(self) -> None:
+        helper_data = await self.get_helper()
+        helper_data.youtube.update(load_codes_from_files())
         all_daily_quests = await self.all_daily_quests()
         for key, value in all_daily_quests.items():
             if (
                 value["type"] == "youtube"
                 and not value["isRewarded"]
-                and (code := try_to_get_code(value["description"]))
+                and (code := helper_data.youtube.get(value["description"]))
             ):
                 await self.daily_quest_reward(json_body={"data": {"quest": key, "code": str(code)}})
                 self.logger.info(f'Quest <green>{value["description"]}</green> claimed')
@@ -338,6 +341,8 @@ class CryptoBot(CryptoBotApi):
                     break
                 try:
                     if await self.login_to_app(proxy):
+                        if not self.settings_was_set:
+                            await self.sent_eng_settings()
                         self.dbs = await self.get_dbs()
 
                         self.user_profile: ProfileData = await self.get_profile_full()
