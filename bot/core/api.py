@@ -8,7 +8,7 @@ from urllib.parse import parse_qs
 import aiohttp
 from aiocache import Cache, cached
 from better_proxy import Proxy
-from pyrogram import Client
+from pyrogram import Client, errors
 from pyrogram.errors import AuthKeyUnregistered, Unauthorized, UserDeactivated
 from pyrogram.raw.functions.messages import RequestAppWebView
 from pyrogram.raw.types import InputBotAppShortName
@@ -40,6 +40,13 @@ class CryptoBotApi:
         self.errors = 0
         self.logger = log.bind(session_name=self.session_name)
 
+    async def connect_to_tg_client(self):
+        if not self.tg_client.is_connected:
+            try:
+                await self.tg_client.connect()
+            except (Unauthorized, UserDeactivated, AuthKeyUnregistered) as error:
+                raise RuntimeError(str(error)) from error
+
     async def get_tg_web_data(self, proxy: str | None) -> TgWebData:
         if proxy:
             proxy = Proxy.from_str(proxy)
@@ -56,11 +63,7 @@ class CryptoBotApi:
         self.tg_client.proxy = proxy_dict
 
         try:
-            if not self.tg_client.is_connected:
-                try:
-                    await self.tg_client.connect()
-                except (Unauthorized, UserDeactivated, AuthKeyUnregistered) as error:
-                    raise RuntimeError(str(error)) from error
+            await self.connect_to_tg_client()
 
             peer = await self.tg_client.resolve_peer(config.bot_name)
 
@@ -97,7 +100,28 @@ class CryptoBotApi:
             log.error(f"{self.session_name} | Authorization error: {error}")
             await asyncio.sleep(delay=3)
 
-    async def sleeper(self, delay: int = config.RANDOM_SLEEP_TIME, additional_delay: int = 0) -> None:
+    async def join_and_archive_channel(self, channel_name: str) -> None:
+        try:
+            await self.connect_to_tg_client()
+
+            chat = await self.tg_client.join_chat(channel_name)
+            self.logger.info(
+                f"Successfully joined to  <g>{chat.title}</g> successfully archived"
+            )
+            await self.tg_client.archive_chats(chat_ids=[chat.id])
+            self.logger.info(f"Channel <g>{chat.title}</g> successfully archived")
+
+        except errors.FloodWait as e:
+            self.logger.error(f"Waiting {e.value} seconds before the next attempt.")
+
+            await asyncio.sleep(e.value)  # Wait before retrying
+
+        except Exception as e:
+            self.logger.error(f"An error occurred: {e}")
+
+    async def sleeper(
+        self, delay: int = config.RANDOM_SLEEP_TIME, additional_delay: int = 0
+    ) -> None:
         await asyncio.sleep(random.random() * delay + additional_delay)
 
     @error_handler()
@@ -119,8 +143,8 @@ class CryptoBotApi:
         self._update_money_balance(response_json)
         self.logger.info(
             f"Level: <blue>{self.level}</blue> | "
-            f"Balance: <yellow>{num_prettier(self.balance)}</yellow> | "
-            f"Money per hour: <green>{num_prettier(self.mph)}</green>"
+            f"Balance: <y>{num_prettier(self.balance)}</y> | "
+            f"Money per hour: <g>{num_prettier(self.mph)}</g>"
         )
         return Profile(**response_json["data"])
 
@@ -138,7 +162,9 @@ class CryptoBotApi:
     @handle_request("/hero/bonus/offline/claim")
     async def get_offline_bonus(self, *, response_json: dict) -> None:
         self._update_money_balance(response_json)
-        self.logger.success(f"Offline bonus claimed: <yellow>+{num_prettier(self.user_profile.offline_bonus)}</yellow>")
+        self.logger.success(
+            f"Offline bonus claimed: <y>+{num_prettier(self.user_profile.offline_bonus)}</y>"
+        )
 
     @error_handler()
     @handle_request("/quests/daily/claim")
@@ -163,7 +189,7 @@ class CryptoBotApi:
 
     @error_handler()
     @handle_request("/quests/check")
-    async def solve_rebus(self, *, response_json: dict, json_body: dict) -> bool:
+    async def quest_check(self, *, response_json: dict, json_body: dict) -> bool:
         await self.sleeper()
         await self.quest_reward_claim(json_body=json_body)
 
@@ -184,11 +210,18 @@ class CryptoBotApi:
     @cached(ttl=6 * 60 * 60, cache=Cache.MEMORY)
     @error_handler()
     @handle_request(
-        "https://raw.githubusercontent.com/testingstrategy/musk_daily/main/daily.json", method="GET", full_url=True
+        "https://raw.githubusercontent.com/testingstrategy/musk_daily/main/daily.json",
+        method="GET",
+        full_url=True,
     )
     async def get_helper(self, *, response_json: str) -> FundHelper | dict:
         response_json = json.loads(response_json)
-        return FundHelper(funds=response_json.get(str(datetime.now(UTC).date()), {}).get('funds', set()), **response_json)
+        return FundHelper(
+            funds=response_json.get(str(datetime.now(UTC).date()), {}).get(
+                "funds", set()
+            ),
+            **response_json,
+        )
 
     @error_handler()
     @handle_request("/fund/info")
@@ -202,7 +235,9 @@ class CryptoBotApi:
 
     @error_handler()
     @handle_request("/pvp/fight")
-    async def get_pvp_fight(self, *, response_json: dict, json_body: dict) -> PvpData | None:
+    async def get_pvp_fight(
+        self, *, response_json: dict, json_body: dict
+    ) -> PvpData | None:
         if response_json["data"].get("opponent"):
             return PvpData(**response_json["data"])
         return None
@@ -237,7 +272,11 @@ class CryptoBotApi:
         for fnd in data["funds"]:
             if fnd["fundKey"] == json_body["data"]["fund"]:
                 money = fnd["moneyProfit"]
-                money_str = f"Win: <yellow>+{money}</yellow>" if money > 0 else f"Loss: <red>{money}</red>"
+                money_str = (
+                    f"Win: <y>+{money}</y>"
+                    if money > 0
+                    else f"Loss: <red>{money}</red>"
+                )
                 self.logger.success(f"Invest completed: {money_str}")
                 break
 
@@ -248,7 +287,9 @@ class CryptoBotApi:
 
     async def check_proxy(self, proxy: Proxy) -> None:
         try:
-            response = await self.http_client.get(url="https://httpbin.org/ip", timeout=aiohttp.ClientTimeout(10))
+            response = await self.http_client.get(
+                url="https://httpbin.org/ip", timeout=aiohttp.ClientTimeout(10)
+            )
             ip = (await response.json()).get("origin")
             self.logger.info(f"Proxy IP: {ip}")
         except Exception:
