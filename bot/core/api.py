@@ -105,9 +105,7 @@ class CryptoBotApi:
             await self.connect_to_tg_client()
 
             chat = await self.tg_client.join_chat(channel_name)
-            self.logger.info(
-                f"Successfully joined to  <g>{chat.title}</g> successfully archived"
-            )
+            self.logger.info(f"Successfully joined to  <g>{chat.title}</g> successfully archived")
             await self.tg_client.archive_chats(chat_ids=[chat.id])
             self.logger.info(f"Channel <g>{chat.title}</g> successfully archived")
 
@@ -119,9 +117,7 @@ class CryptoBotApi:
         except Exception as e:
             self.logger.error(f"An error occurred: {e}")
 
-    async def sleeper(
-        self, delay: int = config.RANDOM_SLEEP_TIME, additional_delay: int = 0
-    ) -> None:
+    async def sleeper(self, delay: int = config.RANDOM_SLEEP_TIME, additional_delay: int = 0) -> None:
         await asyncio.sleep(random.random() * delay + additional_delay)
 
     @error_handler()
@@ -162,9 +158,7 @@ class CryptoBotApi:
     @handle_request("/hero/bonus/offline/claim")
     async def get_offline_bonus(self, *, response_json: dict) -> None:
         self._update_money_balance(response_json)
-        self.logger.success(
-            f"Offline bonus claimed: <y>+{num_prettier(self.user_profile.offline_bonus)}</y>"
-        )
+        self.logger.success(f"Offline bonus claimed: <y>+{num_prettier(self.user_profile.offline_bonus)}</y>")
 
     @error_handler()
     @handle_request("/quests/daily/claim")
@@ -217,9 +211,7 @@ class CryptoBotApi:
     async def get_helper(self, *, response_json: str) -> FundHelper | dict:
         response_json = json.loads(response_json)
         return FundHelper(
-            funds=response_json.get(str(datetime.now(UTC).date()), {}).get(
-                "funds", set()
-            ),
+            funds=response_json.get(str(datetime.now(UTC).date()), {}).get("funds", set()),
             **response_json,
         )
 
@@ -229,15 +221,23 @@ class CryptoBotApi:
         return response_json["data"]
 
     @error_handler()
+    @handle_request("/box/list", json_body={})
+    async def get_box_list(self, *, response_json: dict) -> dict:
+        return response_json["data"] or {}
+
+    @error_handler()
+    @handle_request("/box/open")
+    async def box_open(self, *, response_json: dict, json_body: dict) -> list:
+        return response_json["data"]
+
+    @error_handler()
     @handle_request("/pvp/info")
     async def get_pvp_info(self, *, response_json: dict) -> dict:
         return response_json["data"]
 
     @error_handler()
     @handle_request("/pvp/fight")
-    async def get_pvp_fight(
-        self, *, response_json: dict, json_body: dict
-    ) -> PvpData | None:
+    async def get_pvp_fight(self, *, response_json: dict, json_body: dict) -> PvpData | None:
         if response_json["data"].get("opponent"):
             return PvpData(**response_json["data"])
         return None
@@ -272,11 +272,7 @@ class CryptoBotApi:
         for fnd in data["funds"]:
             if fnd["fundKey"] == json_body["data"]["fund"]:
                 money = fnd["moneyProfit"]
-                money_str = (
-                    f"Win: <y>+{money}</y>"
-                    if money > 0
-                    else f"Loss: <red>{money}</red>"
-                )
+                money_str = f"Win: <y>+{money}</y>" if money > 0 else f"Loss: <red>{money}</red>"
                 self.logger.success(f"Invest completed: {money_str}")
                 break
 
@@ -287,9 +283,7 @@ class CryptoBotApi:
 
     async def check_proxy(self, proxy: Proxy) -> None:
         try:
-            response = await self.http_client.get(
-                url="https://httpbin.org/ip", timeout=aiohttp.ClientTimeout(10)
-            )
+            response = await self.http_client.get(url="https://httpbin.org/ip", timeout=aiohttp.ClientTimeout(10))
             ip = (await response.json()).get("origin")
             self.logger.info(f"Proxy IP: {ip}")
         except Exception:
