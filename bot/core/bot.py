@@ -59,7 +59,9 @@ class CryptoBot(CryptoBotApi):
             try:
                 json_data = {
                     "data": {
-                        "data": {"task": {"amount": earned_money, "currentEnergy": energy}},
+                        "data": {
+                            "task": {"amount": earned_money, "currentEnergy": energy}
+                        },
                         "seconds": seconds,
                     }
                 }
@@ -77,21 +79,30 @@ class CryptoBot(CryptoBotApi):
         helper_data.youtube.update(load_codes_from_files())
         all_daily_quests = await self.all_daily_quests()
         for key, value in all_daily_quests.items():
+            if "all_complete" == key:
+                continue
             if (
                 value["type"] == "youtube"
                 and not value["isRewarded"]
                 and (code := helper_data.youtube.get(value["description"]))
             ):
-                await self.daily_quest_reward(json_body={"data": {"quest": key, "code": str(code)}})
+                await self.daily_quest_reward(
+                    json_body={"data": {"quest": key, "code": str(code)}}
+                )
                 self.logger.info(f'Quest <green>{value["description"]}</green> claimed')
             if not value["isRewarded"] and value["isComplete"] and not value["url"]:
-                await self.daily_quest_reward(json_body={"data": {"quest": key, "code": None}})
+                await self.daily_quest_reward(
+                    json_body={"data": {"quest": key, "code": None}}
+                )
                 self.logger.info(f"Quest <green>{key}</green> claimed")
 
     async def claim_all_executed_quest(self) -> None:
         for i in self.data_after.quests:
             if not i["isRewarded"]:
-                if config.SKIP_IMPROVE_DISCIPLINE_BUG and i["key"] == "improve_discipline":
+                if (
+                    config.SKIP_IMPROVE_DISCIPLINE_BUG
+                    and i["key"] == "improve_discipline"
+                ):
                     continue
                 await self.quest_reward_claim(json_body={"data": [i["key"], None]})
                 self.logger.info(f'Quest <green>{i["key"]}</green> claimed ')
@@ -113,14 +124,22 @@ class CryptoBot(CryptoBotApi):
                     if money >= 0
                     else f"Loss: <red>-{num_prettier(money)}</red>"
                 )
-                self.logger.info(f"PvP negotiations stopped (<red>not enough money</red>). Pvp profit: {money_str}")
+                self.logger.info(
+                    f"PvP negotiations stopped (<red>not enough money</red>). Pvp profit: {money_str}"
+                )
                 break
 
             if strategy == "random":
                 current_strategy = random.choice(self.strategies)
             self.logger.info("Searching opponent...")
-            current_strategy = current_strategy.value if isinstance(current_strategy, Enum) else current_strategy
-            json_data = {"data": {"league": league["key"], "strategy": current_strategy}}
+            current_strategy = (
+                current_strategy.value
+                if isinstance(current_strategy, Enum)
+                else current_strategy
+            )
+            json_data = {
+                "data": {"league": league["key"], "strategy": current_strategy}
+            }
             response_json = await self.get_pvp_fight(json_body=json_data)
             if response_json is None:
                 await self.sleeper(delay=10, additional_delay=5)
@@ -128,7 +147,9 @@ class CryptoBot(CryptoBotApi):
 
             fight = response_json.fight
             opponent_strategy = (
-                fight.player2Strategy if fight.player1 == self.user_profile.user_id else fight.player1Strategy
+                fight.player2Strategy
+                if fight.player1 == self.user_profile.user_id
+                else fight.player1Strategy
             )
             if fight.winner == self.user_profile.user_id:
                 money += fight.moneyProfit
@@ -158,7 +179,9 @@ class CryptoBot(CryptoBotApi):
         self.pvp_count = config.PVP_COUNT
 
     async def get_friend_reward(self) -> None:
-        unrewarded_friends = [friend for friend in self.data_after.friends if friend["bonusToTake"] > 0]
+        unrewarded_friends = [
+            friend for friend in self.data_after.friends if friend["bonusToTake"] > 0
+        ]
         if unrewarded_friends:
             self.logger.info("Reward for friends available")
             for friend in unrewarded_friends:
@@ -169,22 +192,34 @@ class CryptoBot(CryptoBotApi):
             quest_key = quest["key"]
             if quest["requiredLevel"] > self.user_profile.level:
                 continue
-            if any(i in quest_key for i in ("riddle", "rebus")) and not self._is_event_solved(quest_key):
-                await self.solve_rebus(json_body={"data": [quest_key, quest["checkData"]]})
+            if any(
+                i in quest_key for i in ("riddle", "rebus")
+            ) and not self._is_event_solved(quest_key):
+                await self.solve_rebus(
+                    json_body={"data": [quest_key, quest["checkData"]]}
+                )
                 self.logger.info(f"Was solved <green>{quest['title']}</green>")
 
     def _is_event_solved(self, quest_key: str) -> bool:
-        return self.data_after.quests and any(i["key"] == quest_key for i in self.data_after.quests)
+        return self.data_after.quests and any(
+            i["key"] == quest_key for i in self.data_after.quests
+        )
 
     async def set_funds(self) -> None:
         helper_data = await self.get_helper()
         if helper_data.funds:
             current_invest = await self.get_funds_info()
             already_funded = {i["fundKey"] for i in current_invest["funds"]}
-            for fund in list(helper_data.funds - already_funded)[: 3 - len(already_funded)]:
+            for fund in list(helper_data.funds - already_funded)[
+                : 3 - len(already_funded)
+            ]:
                 if self.balance > (amount := self.bet_calculator.calculate_bet()):
-                    self.logger.info(f"Investing <yellow>{num_prettier(amount)}</yellow> to  fund <blue>{fund}</blue>")
-                    await self.invest(json_body={"data": {"fund": fund, "money": amount}})
+                    self.logger.info(
+                        f"Investing <yellow>{num_prettier(amount)}</yellow> to  fund <blue>{fund}</blue>"
+                    )
+                    await self.invest(
+                        json_body={"data": {"fund": fund, "money": amount}}
+                    )
                 else:
                     self.logger.info("Not enough money for invest")
 
@@ -198,15 +233,23 @@ class CryptoBot(CryptoBotApi):
 
             if league_data is not None:
                 if self.level >= int(league_data["requiredLevel"]):
-                    self.strategies = [strategy["key"] for strategy in self.dbs["dbNegotiationsStrategy"]]
-                    if Strategy.random == config.PVP_STRATEGY or config.PVP_STRATEGY in self.strategies:
+                    self.strategies = [
+                        strategy["key"]
+                        for strategy in self.dbs["dbNegotiationsStrategy"]
+                    ]
+                    if (
+                        Strategy.random == config.PVP_STRATEGY
+                        or config.PVP_STRATEGY in self.strategies
+                    ):
                         await self._perform_pvp(
                             league=league_data,
                             strategy=config.PVP_STRATEGY.value,
                         )
                     else:
                         config.PVP_ENABLED = False
-                        self.logger.warning("PVP_STRATEGY param is invalid. PvP negotiations disabled.")
+                        self.logger.warning(
+                            "PVP_STRATEGY param is invalid. PvP negotiations disabled."
+                        )
                 else:
                     config.PVP_ENABLED = False
                     self.logger.warning(
@@ -214,9 +257,13 @@ class CryptoBot(CryptoBotApi):
                     )
             else:
                 config.PVP_ENABLED = False
-                self.logger.warning("PVP_LEAGUE param is invalid. PvP negotiations disabled.")
+                self.logger.warning(
+                    "PVP_LEAGUE param is invalid. PvP negotiations disabled."
+                )
         else:
-            self.logger.warning("Database is missing. PvP negotiations will be skipped this time.")
+            self.logger.warning(
+                "Database is missing. PvP negotiations will be skipped this time."
+            )
 
     async def upgrade_hero(self) -> None:
         available_skill = list(self._get_available_skills())
@@ -275,7 +322,9 @@ class CryptoBot(CryptoBotApi):
 
     def _calkulate_skill_requirements(self, skill: DbSkill) -> None:
         skill.next_level = (
-            self.data_after.skills[skill.key]["level"] + 1 if self.data_after.skills.get(skill.key) else 1
+            self.data_after.skills[skill.key]["level"] + 1
+            if self.data_after.skills.get(skill.key)
+            else 1
         )
         skill.skill_profit = skill.calculate_profit(skill.next_level)
         skill.skill_price = skill.price_for_level(skill.next_level)
@@ -284,7 +333,10 @@ class CryptoBot(CryptoBotApi):
 
     def _is_available_to_upgrade_skills(self, skill: DbSkill) -> bool:
         # check the current skill is still in the process of improvement
-        if skill.progress_time and skill.progress_time.timestamp() + 60 > datetime.now(UTC).timestamp():
+        if (
+            skill.progress_time
+            and skill.progress_time.timestamp() + 60 > datetime.now(UTC).timestamp()
+        ):
             return False
         if skill.next_level > skill.maxLevel:
             return False
@@ -352,7 +404,9 @@ class CryptoBot(CryptoBotApi):
                     profile = await self.syn_hero_balance()
 
                     config.MONEY_TO_SAVE = self.bet_calculator.max_bet()
-                    self.logger.info(f"Max bet for funds saved: <yellow>{num_prettier(config.MONEY_TO_SAVE)}</yellow>")
+                    self.logger.info(
+                        f"Max bet for funds saved: <yellow>{num_prettier(config.MONEY_TO_SAVE)}</yellow>"
+                    )
 
                     self.data_after = await self.user_data_after()
 
@@ -362,7 +416,11 @@ class CryptoBot(CryptoBotApi):
 
                     await self.get_friend_reward()
 
-                    if config.TAPS_ENABLED and profile.energy and time.monotonic() > self.temporary_stop_taps_time:
+                    if (
+                        config.TAPS_ENABLED
+                        and profile.energy
+                        and time.monotonic() > self.temporary_stop_taps_time
+                    ):
                         await self.perform_taps(profile)
 
                     await self.set_funds()
@@ -395,6 +453,8 @@ class CryptoBot(CryptoBotApi):
 
 async def run_bot(tg_client: Client, proxy: str | None, additional_data: dict) -> None:
     try:
-        await CryptoBot(tg_client=tg_client, additional_data=additional_data).run(proxy=proxy)
+        await CryptoBot(tg_client=tg_client, additional_data=additional_data).run(
+            proxy=proxy
+        )
     except RuntimeError:
         log.bind(session_name=tg_client.name).exception("Session error")
