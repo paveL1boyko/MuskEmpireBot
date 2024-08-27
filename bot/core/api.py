@@ -188,7 +188,7 @@ class CryptoBotApi:
     )
     async def get_helper(self, *, response_json: str) -> FundHelper | dict:
         response_json = json.loads(response_json)
-        return FundHelper(funds=response_json.get(str(datetime.now(UTC).date()), {}).get('funds', {}), **response_json)
+        return FundHelper(funds=response_json.get(str(datetime.now(UTC).date()), {}).get('funds', set()), **response_json)
 
     @error_handler()
     @handle_request("/fund/info")
