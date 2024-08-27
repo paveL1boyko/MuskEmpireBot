@@ -57,8 +57,8 @@ class Settings(BaseSettings):
 
     AUTO_UPGRADE_MINING: bool = True
     MAX_MINING_UPGRADE_LEVEL: int = 30
-    MAX_MINING_ENERGY_RECOVERY_UPGRADE_LEVEL: int = 55
-    MINING_ENERGY_SKILLS: list[str] = ["energy_capacity", "energy_recovery"]
+    MAX_MINING_ENERGY_RECOVERY_UPGRADE_LEVEL: int = 54
+    MINING_ENERGY_SKILLS: list[str] = ["energy_capacity", "energy_recovery", "profit_per_tap_power"]
     MAX_MINING_UPGRADE_COSTS: int = 5_000_000
 
     SKIP_IMPROVE_DISCIPLINE_BUG: bool = Field(
