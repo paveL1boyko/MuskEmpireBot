@@ -77,8 +77,6 @@ class CryptoBot(CryptoBotApi):
         helper_data.youtube.update(load_codes_from_files())
         all_daily_quests = await self.all_daily_quests()
         for key, value in all_daily_quests.items():
-            if key == "all_complete":
-                continue
             if (
                 value["type"] == "youtube"
                 and not value["isRewarded"]
