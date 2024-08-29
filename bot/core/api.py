@@ -33,7 +33,7 @@ class CryptoBotApi:
         self.session_name = tg_client.name
         self.tg_client = tg_client
         self.user_id = None
-        self.api_url = "https://api.muskempire.io"
+        self.api_url = "https://api.xempire.io"
         self.need_quiz = False
         self.need_rebus = False
         self.rebus_key = ""
