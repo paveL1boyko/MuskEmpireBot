@@ -80,7 +80,7 @@ class CryptoBot(CryptoBotApi):
             if (
                 value["type"] == "youtube"
                 and not value["isRewarded"]
-                and (code := helper_data.youtube.get(value["description"]))
+                and (code := helper_data.youtube.get(value["description"])) is not None
             ):
                 await self.daily_quest_reward(json_body={"data": {"quest": key, "code": str(code)}})
                 self.logger.info(f'Quest <g>{value["description"]}</g> claimed')
