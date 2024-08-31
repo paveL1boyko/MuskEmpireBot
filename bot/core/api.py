@@ -272,7 +272,9 @@ class CryptoBotApi:
         for fnd in data["funds"]:
             if fnd["fundKey"] == json_body["data"]["fund"]:
                 money = fnd["moneyProfit"]
-                money_str = f"Win: <y>+{money}</y>" if money > 0 else f"Loss: <red>{money}</red>"
+                money_str = (
+                    f"Win: <y>+{num_prettier(money)}</y>" if money > 0 else f"Loss: <red>{num_prettier(money)}</red>"
+                )
                 self.logger.success(f"Invest completed: {money_str}")
                 break
 
