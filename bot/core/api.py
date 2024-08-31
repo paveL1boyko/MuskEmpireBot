@@ -201,7 +201,7 @@ class CryptoBotApi:
         self.tapped_today = data.get("tappedToday", 0)
         return int(data["hero"]["earns"]["task"]["energy"])
 
-    @cached(ttl=6 * 60 * 60, cache=Cache.MEMORY)
+    @cached(ttl=2 * 60 * 60, cache=Cache.MEMORY)
     @error_handler()
     @handle_request(
         "https://raw.githubusercontent.com/testingstrategy/musk_daily/main/daily.json",
