@@ -77,15 +77,16 @@ class CryptoBot(CryptoBotApi):
         helper_data.youtube.update(load_codes_from_files())
         all_daily_quests = await self.all_daily_quests()
         for key, value in all_daily_quests.items():
+            desc = value["description"]
             if (
                 value["type"] == "youtube"
                 and not value["isRewarded"]
                 and (code := helper_data.youtube.get(value["description"])) is not None
             ):
                 await self.daily_quest_reward(json_body={"data": {"quest": key, "code": str(code)}})
-                self.logger.info(f'Quest <g>{value["description"]}</g> claimed')
-            else:
-                self.logger.info(f"Quest <r>{value['description']}</r> not executed")
+                self.logger.info(f"Quest <g>{desc}</g> claimed")
+            elif desc:
+                self.logger.info(f"Quest <r>{desc}</r> not executed")
             if not value["isRewarded"] and value["isComplete"] and not value["url"]:
                 await self.daily_quest_reward(json_body={"data": {"quest": key, "code": None}})
                 self.logger.info(f"Quest <g>{key}</g> claimed")
