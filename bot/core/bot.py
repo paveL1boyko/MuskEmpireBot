@@ -157,11 +157,11 @@ class CryptoBot(CryptoBotApi):
         self.pvp_count = config.PVP_COUNT
 
     async def get_friend_reward(self) -> None:
-        unrewarded_friends = [friend for friend in self.data_after.friends if friend["bonusToTake"] > 0]
-        if unrewarded_friends:
-            self.logger.info("Reward for friends available")
-            for friend in unrewarded_friends:
-                await self.friend_reward(json_body={"data": friend["id"]})
+        for friend in [friend for friend in self.data_after.friends if friend["bonusToTake"] > 0]:
+            await self.friend_reward(json_body={"data": friend["id"]})
+            self.logger.info(
+                f"Friend <g>{friend['name']}</g> claimed money <y>{num_prettier(friend['bonusToTake'])}</y>"
+            )
 
     async def solve_quiz_and_rebus(self) -> None:
         for quest in self.dbs["dbQuests"]:
@@ -362,9 +362,9 @@ class CryptoBot(CryptoBotApi):
 
                     self.data_after = await self.user_data_after()
 
-                    await self.claim_daily_reward()
-
-                    await self.execute_and_claim_daily_quest()
+                    # await self.claim_daily_reward()
+                    #
+                    # await self.execute_and_claim_daily_quest()
 
                     await self.get_friend_reward()
 
