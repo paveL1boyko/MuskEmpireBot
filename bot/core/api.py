@@ -1,7 +1,7 @@
 import asyncio
 import json
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import NamedTuple
 from urllib.parse import parse_qs
 
@@ -9,9 +9,10 @@ import aiohttp
 from aiocache import Cache, cached
 from better_proxy import Proxy
 from pyrogram import Client, errors
-from pyrogram.errors import AuthKeyUnregistered, Unauthorized, UserDeactivated
+from pyrogram.errors import RPCError
+from pyrogram.raw.functions import account
 from pyrogram.raw.functions.messages import RequestAppWebView
-from pyrogram.raw.types import InputBotAppShortName
+from pyrogram.raw.types import InputBotAppShortName, InputNotifyPeer, InputPeerNotifySettings
 from pytz import UTC
 
 from bot.config.logger import log
@@ -40,13 +41,6 @@ class CryptoBotApi:
         self.errors = 0
         self.logger = log.bind(session_name=self.session_name)
 
-    async def connect_to_tg_client(self):
-        if not self.tg_client.is_connected:
-            try:
-                await self.tg_client.connect()
-            except (Unauthorized, UserDeactivated, AuthKeyUnregistered) as error:
-                raise RuntimeError(str(error)) from error
-
     async def get_tg_web_data(self, proxy: str | None) -> TgWebData:
         if proxy:
             proxy = Proxy.from_str(proxy)
@@ -63,22 +57,20 @@ class CryptoBotApi:
         self.tg_client.proxy = proxy_dict
 
         try:
-            await self.connect_to_tg_client()
+            async with self.tg_client:
+                peer = await self.tg_client.resolve_peer(config.bot_name)
 
-            peer = await self.tg_client.resolve_peer(config.bot_name)
-
-            web_view = await self.tg_client.invoke(
-                RequestAppWebView(
-                    peer=peer,
-                    app=InputBotAppShortName(bot_id=peer, short_name="game"),
-                    platform="android",
-                    write_allowed=True,
-                    start_param=config.REF_ID,
+                web_view = await self.tg_client.invoke(
+                    RequestAppWebView(
+                        peer=peer,
+                        app=InputBotAppShortName(bot_id=peer, short_name="game"),
+                        platform="android",
+                        write_allowed=True,
+                        start_param=config.REF_ID,
+                    )
                 )
-            )
-            tg_web_data = parse_qs(web_view.url.split("#")[1]).get("tgWebAppData")[0]
-            query_params = parse_qs(tg_web_data)
-            await self.tg_client.disconnect()
+                tg_web_data = parse_qs(web_view.url.split("#")[1]).get("tgWebAppData")[0]
+                query_params = parse_qs(tg_web_data)
             return TgWebData(
                 request_data={
                     "data": {
@@ -102,20 +94,38 @@ class CryptoBotApi:
 
     async def join_and_archive_channel(self, channel_name: str) -> None:
         try:
-            await self.connect_to_tg_client()
+            async with self.tg_client:
+                try:
+                    chat = await self.tg_client.join_chat(channel_name)
+                    self.logger.info(f"Successfully joined to  <g>{chat.title}</g> successfully archived")
+                except RPCError:
+                    self.logger.error("Channel <y>{channel_name}</y> not found")
+                    raise
+                else:
+                    await self.sleeper()
+                    peer = await self.tg_client.resolve_peer(chat.id)
+                    until_date = datetime.now() + timedelta(
+                        days=365 * 100
+                    )  # Устанавливаем максимальный срок (100 лет от текущей даты)
 
-            chat = await self.tg_client.join_chat(channel_name)
-            self.logger.info(f"Successfully joined to  <g>{chat.title}</g> successfully archived")
-            await self.tg_client.archive_chats(chat_ids=[chat.id])
-            self.logger.info(f"Channel <g>{chat.title}</g> successfully archived")
+                    await self.tg_client.set_chat_mute(chat_id=chat.id, until_date=until_date)
+
+                    await self.tg_client.invoke(
+                        account.UpdateNotifySettings(
+                            peer=InputNotifyPeer(peer=peer), settings=InputPeerNotifySettings(mute_until=2147483647)
+                        )
+                    )
+                    self.logger.info(f"Successfully muted chat <g>{chat.title}</g> for channel <y>{channel_name}</y>")
+                    await self.sleeper()
+                    await self.tg_client.archive_chats(chat_ids=[chat.id])
+                    self.logger.info(
+                        f"Channel <g>{chat.title}</g> successfully archived for channel <y>{channel_name}</y>"
+                    )
 
         except errors.FloodWait as e:
             self.logger.error(f"Waiting {e.value} seconds before the next attempt.")
-
-            await asyncio.sleep(e.value)  # Wait before retrying
-
-        except Exception as e:
-            self.logger.error(f"An error occurred: {e}")
+            await asyncio.sleep(e.value)
+            raise
 
     async def sleeper(self, delay: int = config.RANDOM_SLEEP_TIME, additional_delay: int = 0) -> None:
         await asyncio.sleep(random.random() * delay + additional_delay)
