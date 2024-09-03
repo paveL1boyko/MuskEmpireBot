@@ -145,7 +145,7 @@ class CryptoBot(CryptoBotApi):
                 f"Opponent strategy: <blue>{opponent_strategy}</blue> | "
                 f"{log_part}"
             )
-            await self.sleeper(additional_delay=3)
+            await self.sleeper(additional_delay=9)
             await self.get_pvp_claim()
             self.pvp_count -= 1
             await self.sleeper()
