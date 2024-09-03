@@ -103,10 +103,11 @@ class CryptoBot(CryptoBotApi):
         self.logger.info(
             f"PvP negotiations started | League: <blue>{league['key']}</blue> | Strategy: <g>{strategy}</g>"
         )
-        await self.get_pvp_info()
+        res = await self.get_pvp_info()
         await self.sleeper()
-        await self.get_pvp_claim()
-        await self.sleeper()
+        if res.get("fight"):
+            await self.get_pvp_claim()
+            await self.sleeper()
         current_strategy = strategy
         money = 0
         while self.pvp_count > 0:
@@ -362,9 +363,9 @@ class CryptoBot(CryptoBotApi):
 
                     self.data_after = await self.user_data_after()
 
-                    # await self.claim_daily_reward()
-                    #
-                    # await self.execute_and_claim_daily_quest()
+                    await self.claim_daily_reward()
+
+                    await self.execute_and_claim_daily_quest()
 
                     await self.get_friend_reward()
 
