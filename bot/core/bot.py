@@ -163,6 +163,7 @@ class CryptoBot(CryptoBotApi):
             self.logger.info(
                 f"Friend <g>{friend['name']}</g> claimed money <y>{num_prettier(friend['bonusToTake'])}</y>"
             )
+            await self.sleeper()
 
     async def solve_quiz_and_rebus(self) -> None:
         for quest in self.dbs["dbQuests"]:
