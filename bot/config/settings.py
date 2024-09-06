@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     USE_PROXY_FROM_FILE: bool = False
     ADD_LOCAL_MACHINE_AS_IP: bool = False
 
-    RANDOM_SLEEP_TIME: int = 5
+    RANDOM_SLEEP_TIME: int = 8
     SKILL_WEIGHT: float = 0
 
     MONEY_TO_SAVE: int = 1_000_000

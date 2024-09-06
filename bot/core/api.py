@@ -127,7 +127,7 @@ class CryptoBotApi:
             await asyncio.sleep(e.value)
             raise
 
-    async def sleeper(self, delay: int = config.RANDOM_SLEEP_TIME, additional_delay: int = 0) -> None:
+    async def sleeper(self, delay: int = config.RANDOM_SLEEP_TIME, additional_delay: int = 4) -> None:
         await asyncio.sleep(random.random() * delay + additional_delay)
 
     @error_handler()
