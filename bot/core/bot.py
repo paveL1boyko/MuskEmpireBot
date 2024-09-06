@@ -351,9 +351,11 @@ class CryptoBot(CryptoBotApi):
                     if await self.login_to_app(proxy):
                         if not self.settings_was_set:
                             await self.sent_eng_settings()
-                        self.dbs = await self.get_dbs()
+                        data = await self.get_profile_full()
+                        self.dbs = data["dbData"]
                         await self.get_box_rewards()
-                        self.user_profile: ProfileData = await self.get_profile_full()
+
+                        self.user_profile: ProfileData = ProfileData(**data)
                         if self.user_profile.offline_bonus > 0:
                             await self.get_offline_bonus()
 

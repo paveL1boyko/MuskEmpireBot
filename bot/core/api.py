@@ -156,8 +156,8 @@ class CryptoBotApi:
 
     @error_handler()
     @handle_request("/user/data/all", json_body={"data": {}})
-    async def get_profile_full(self, *, response_json: dict) -> ProfileData:
-        return ProfileData(**response_json["data"])
+    async def get_profile_full(self, *, response_json: dict) -> dict:
+        return dict(**response_json["data"])
 
     @error_handler()
     @handle_request("/user/data/after", json_body={"data": {"lang": "en"}})
