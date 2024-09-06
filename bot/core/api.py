@@ -160,7 +160,7 @@ class CryptoBotApi:
         return ProfileData(**response_json["data"])
 
     @error_handler()
-    @handle_request("/user/data/after", json_body={"data": {"lang": "ru"}})
+    @handle_request("/user/data/after", json_body={"data": {"lang": "en"}})
     async def user_data_after(self, *, response_json: dict) -> UserDataAfter:
         return UserDataAfter(**response_json["data"])
 
@@ -246,7 +246,7 @@ class CryptoBotApi:
         return response_json["data"]
 
     @error_handler()
-    @handle_request("/pvp/fight")
+    @handle_request("/pvp/start/fight")
     async def get_pvp_fight(self, *, response_json: dict, json_body: dict) -> PvpData | None:
         if response_json["data"].get("opponent"):
             return PvpData(**response_json["data"])
