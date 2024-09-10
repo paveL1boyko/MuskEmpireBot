@@ -370,6 +370,8 @@ class CryptoBot(CryptoBotApi):
 
                     await self.execute_and_claim_daily_quest()
 
+                    await self.syn_hero_balance()
+
                     await self.get_friend_reward()
 
                     if config.TAPS_ENABLED and profile.energy and time.monotonic() > self.temporary_stop_taps_time:
@@ -386,7 +388,7 @@ class CryptoBot(CryptoBotApi):
 
                     if config.PVP_ENABLED:
                         await self.starting_pvp()
-
+                    await self.syn_hero_balance()
                     sleep_time = random.randint(*config.BOT_SLEEP_TIME)
                     self.logger.info(f"Sleep minutes {sleep_time // 60} minutes")
                     await asyncio.sleep(sleep_time)

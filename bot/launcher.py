@@ -81,8 +81,8 @@ async def get_tg_clients() -> list[SessionData]:
     ]
 
 
-async def run_bot_with_delay(tg_client: Client, proxy: str | None, additional_data: dict) -> None:
-    delay = random.randint(*config.SLEEP_BETWEEN_START)
+async def run_bot_with_delay(tg_client: Client, proxy: str | None, additional_data: dict, session_index: int) -> None:
+    delay = session_index * config.SESSION_AC_DELAY + random.randint(*config.SLEEP_BETWEEN_START)
     log.bind(session_name=tg_client.name).info(f"Wait {delay} seconds before start")
     await asyncio.sleep(delay)
     await run_bot(tg_client=tg_client, proxy=proxy, additional_data=additional_data)
@@ -95,8 +95,13 @@ async def run_clients(session_data: list[SessionData]) -> None:
     proxy_cycle = cycle(proxies)
     await asyncio.gather(
         *[
-            run_bot_with_delay(tg_client=s_data.tg_client, proxy=next(proxy_cycle), additional_data=s_data.session_data)
-            for s_data in session_data
+            run_bot_with_delay(
+                tg_client=s_data.tg_client,
+                proxy=next(proxy_cycle),
+                additional_data=s_data.session_data,
+                session_index=index,
+            )
+            for index, s_data in enumerate(session_data)
         ]
     )
 
