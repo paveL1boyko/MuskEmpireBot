@@ -349,8 +349,8 @@ class CryptoBot(CryptoBotApi):
                     break
                 try:
                     if await self.login_to_app(proxy):
-                        if not self.settings_was_set:
-                            await self.sent_eng_settings()
+                        # if not self.settings_was_set:
+                        #     await self.sent_eng_settings()
                         data = await self.get_profile_full()
                         self.dbs = data["dbData"]
                         await self.get_box_rewards()
