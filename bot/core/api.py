@@ -9,7 +9,7 @@ import aiohttp
 from aiocache import Cache, cached
 from better_proxy import Proxy
 from pyrogram import Client, errors
-from pyrogram.errors import RPCError
+from pyrogram.errors import FloodWait, RPCError
 from pyrogram.raw.functions import account
 from pyrogram.raw.functions.messages import RequestAppWebView
 from pyrogram.raw.types import InputBotAppShortName, InputNotifyPeer, InputPeerNotifySettings
@@ -20,7 +20,7 @@ from bot.config.settings import config
 from bot.helper.utils import error_handler, handle_request
 
 from .errors import TapsError
-from .models import FundHelper, Profile, ProfileData, PvpData, UserDataAfter
+from .models import FundHelper, Profile, PvpData, UserDataAfter
 from .utils import num_prettier
 
 
@@ -87,10 +87,14 @@ class CryptoBotApi:
 
         except RuntimeError as error:
             raise error from error
-
+        except FloodWait as error:
+            log.warning(f"{self.session_name} | FloodWait error: {error} | Retry in {error.value} seconds")
+            await asyncio.sleep(delay=error.value)
+            raise
         except Exception as error:
             log.error(f"{self.session_name} | Authorization error: {error}")
             await asyncio.sleep(delay=3)
+            raise
 
     async def join_and_archive_channel(self, channel_name: str) -> None:
         try:
