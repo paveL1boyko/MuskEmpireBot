@@ -86,7 +86,7 @@ class CryptoBot(CryptoBotApi):
                 await self.daily_quest_reward(json_body={"data": {"quest": key, "code": str(code)}})
                 self.logger.info(f"Quest <g>{desc}</g> claimed")
             elif desc:
-                self.logger.info(f"Quest <r>{desc}</r> not executed")
+                self.logger.info(f"Quest not executed: \n<r>{desc}</r>")
             if not value["isRewarded"] and value["isComplete"] and not value["url"]:
                 await self.daily_quest_reward(json_body={"data": {"quest": key, "code": None}})
                 self.logger.info(f"Quest <g>{key}</g> claimed")
