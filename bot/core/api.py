@@ -40,6 +40,7 @@ class CryptoBotApi:
         self.rebus_key = ""
         self.errors = 0
         self.logger = log.bind(session_name=self.session_name)
+        self._peer = None
 
     async def get_tg_web_data(self, proxy: str | None) -> TgWebData:
         if proxy:
@@ -58,12 +59,13 @@ class CryptoBotApi:
 
         try:
             async with self.tg_client:
-                peer = await self.tg_client.resolve_peer(config.bot_name)
+                if not self._peer:
+                    self._peer = await self.tg_client.resolve_peer(config.bot_name)
 
                 web_view = await self.tg_client.invoke(
                     RequestAppWebView(
-                        peer=peer,
-                        app=InputBotAppShortName(bot_id=peer, short_name="game"),
+                        peer=self._peer,
+                        app=InputBotAppShortName(bot_id=self._peer, short_name="game"),
                         platform="android",
                         write_allowed=True,
                         start_param=config.REF_ID,
