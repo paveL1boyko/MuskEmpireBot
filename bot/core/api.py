@@ -1,7 +1,7 @@
 import asyncio
 import json
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import NamedTuple
 from urllib.parse import parse_qs
 
@@ -118,11 +118,6 @@ class CryptoBotApi:
                 else:
                     await self.sleeper()
                     peer = await self.tg_client.resolve_peer(chat.id)
-                    until_date = datetime.now() + timedelta(
-                        days=365 * 100
-                    )  # Устанавливаем максимальный срок (100 лет от текущей даты)
-
-                    await self.tg_client.set_chat_mute(chat_id=chat.id, until_date=until_date)
 
                     await self.tg_client.invoke(
                         account.UpdateNotifySettings(
