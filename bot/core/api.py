@@ -59,13 +59,16 @@ class CryptoBotApi:
 
         try:
             async with self.tg_client:
-                # try to fix error for resolving peer name resolve_peer
-                dialogs = self.tg_client.get_dialogs()
-                async for dialog in dialogs:
-                    if dialog.chat and dialog.chat.username and dialog.chat.username == config.bot_name:
-                        break
                 if not self._peer:
-                    self._peer = await self.tg_client.resolve_peer(config.bot_name)
+                    try:
+                        self._peer = await self.tg_client.resolve_peer(config.bot_name)
+                    except FloodWait as error:
+                        log.warning(f"{self.session_name} | FloodWait error: {error} | Retry in {error.value} seconds")
+                        await asyncio.sleep(delay=error.value)
+                        # update in session db peer ids to fix this errors˚
+                        async for dialog in self.tg_client.get_dialogs():
+                            if dialog.chat and dialog.chat.username and dialog.chat.username == config.bot_name:
+                                break
 
                 web_view = await self.tg_client.invoke(
                     RequestAppWebView(
