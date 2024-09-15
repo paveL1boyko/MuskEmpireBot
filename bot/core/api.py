@@ -114,24 +114,23 @@ class CryptoBotApi:
                     self.logger.info(f"Successfully joined to  <g>{chat.title}</g>")
                 except UserAlreadyParticipant:
                     self.logger.info(f"Chat <y>{channel_name}</y> already joined")
+                    chat = await self.tg_client.get_chat(channel_name)
                 except RPCError:
                     self.logger.error(f"Channel <y>{channel_name}</y> not found")
                     raise
-                else:
-                    await self.sleeper()
-                    peer = await self.tg_client.resolve_peer(chat.id)
 
-                    await self.tg_client.invoke(
-                        account.UpdateNotifySettings(
-                            peer=InputNotifyPeer(peer=peer), settings=InputPeerNotifySettings(mute_until=2147483647)
-                        )
+                await self.sleeper()
+                peer = await self.tg_client.resolve_peer(chat.id)
+
+                await self.tg_client.invoke(
+                    account.UpdateNotifySettings(
+                        peer=InputNotifyPeer(peer=peer), settings=InputPeerNotifySettings(mute_until=2147483647)
                     )
-                    self.logger.info(f"Successfully muted chat <g>{chat.title}</g> for channel <y>{channel_name}</y>")
-                    await self.sleeper()
-                    await self.tg_client.archive_chats(chat_ids=[chat.id])
-                    self.logger.info(
-                        f"Channel <g>{chat.title}</g> successfully archived for channel <y>{channel_name}</y>"
-                    )
+                )
+                self.logger.info(f"Successfully muted chat <g>{chat.title}</g> for channel <y>{channel_name}</y>")
+                await self.sleeper()
+                await self.tg_client.archive_chats(chat_ids=[chat.id])
+                self.logger.info(f"Channel <g>{chat.title}</g> successfully archived for channel <y>{channel_name}</y>")
 
         except errors.FloodWait as e:
             self.logger.error(f"Waiting {e.value} seconds before the next attempt.")
