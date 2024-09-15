@@ -171,7 +171,7 @@ class CryptoBot(CryptoBotApi):
             if quest["requiredLevel"] > self.user_profile.level:
                 continue
             if "t.me" in (link := quest.get("actionUrl")) and not self._is_event_solved(quest_key):
-                if len(link.split("/")) > 4:
+                if len(link.split("/")) > 4 or "muskempire" in quest_key:
                     continue
                 if quest["checkType"] != "fakeCheck":
                     link = link if "/+" in link else link.split("/")[-1]
