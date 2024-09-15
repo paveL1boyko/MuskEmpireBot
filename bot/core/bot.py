@@ -177,7 +177,9 @@ class CryptoBot(CryptoBotApi):
                     link = link if "/+" in link else link.split("/")[-1]
                     await self.join_and_archive_channel(link)
                 await self.quest_check(json_body={"data": [quest_key]})
-                self.logger.info(f'Claimed <g>{quest["title"]}</g> Reward: <y>+{quest["rewardMoney"]}</y>quest')
+                self.logger.info(
+                    f'Claimed <g>{quest["title"]}</g> Reward: <y>+{num_prettier(quest["rewardMoney"])}</y>quest'
+                )
             if any(i in quest_key for i in ("riddle", "rebus", "tg_story")) and not self._is_event_solved(quest_key):
                 await self.quest_check(json_body={"data": [quest_key, quest["checkData"]]})
                 self.logger.info(f"Was solved <g>{quest['title']}</g>")
