@@ -69,6 +69,7 @@ class CryptoBotApi:
                         async for dialog in self.tg_client.get_dialogs():
                             if dialog.chat and dialog.chat.username and dialog.chat.username == config.bot_name:
                                 break
+                        self._peer = await self.tg_client.resolve_peer(config.bot_name)
 
                 web_view = await self.tg_client.invoke(
                     RequestAppWebView(
