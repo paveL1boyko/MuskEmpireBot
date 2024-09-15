@@ -9,7 +9,7 @@ import aiohttp
 from aiocache import Cache, cached
 from better_proxy import Proxy
 from pyrogram import Client, errors
-from pyrogram.errors import FloodWait, RPCError
+from pyrogram.errors import FloodWait, RPCError, UserAlreadyParticipant
 from pyrogram.raw.functions import account
 from pyrogram.raw.functions.messages import RequestAppWebView
 from pyrogram.raw.types import InputBotAppShortName, InputNotifyPeer, InputPeerNotifySettings
@@ -111,9 +111,11 @@ class CryptoBotApi:
             async with self.tg_client:
                 try:
                     chat = await self.tg_client.join_chat(channel_name)
-                    self.logger.info(f"Successfully joined to  <g>{chat.title}</g> successfully archived")
+                    self.logger.info(f"Successfully joined to  <g>{chat.title}</g>")
+                except UserAlreadyParticipant:
+                    self.logger.info(f"Chat <y>{channel_name}</y> already joined")
                 except RPCError:
-                    self.logger.error("Channel <y>{channel_name}</y> not found")
+                    self.logger.error(f"Channel <y>{channel_name}</y> not found")
                     raise
                 else:
                     await self.sleeper()
