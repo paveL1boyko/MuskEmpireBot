@@ -266,6 +266,7 @@ class CryptoBot(CryptoBotApi):
         ):
             if skill.title in config.SKIP_TO_UPGRADE_SKILLS:
                 continue
+            # if skill.weight >= config.SKILL_WEIGHT or skill.skill_price <= config.MAX_SKILL_UPGRADE_COSTS:
             if skill.weight >= config.SKILL_WEIGHT:
                 await self._upgrade_skill(skill)
 

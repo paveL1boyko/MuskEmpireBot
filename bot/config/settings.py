@@ -53,6 +53,7 @@ class Settings(BaseSettings):
 
     RANDOM_SLEEP_TIME: int = 8
     SKILL_WEIGHT: float = 0
+    MAX_SKILL_UPGRADE_COSTS: int = 5e9
 
     MONEY_TO_SAVE: int = 1_000_000
 
