@@ -63,7 +63,7 @@ class CryptoBotApi:
                     try:
                         self._peer = await self.tg_client.resolve_peer(config.bot_name)
                     except FloodWait as error:
-                        log.warning(f"{self.session_name} | FloodWait error: {error} | Retry in {error.value} seconds")
+                        self.logger.warning(f"FloodWait error: {error} | Retry in {error.value} seconds")
                         await asyncio.sleep(delay=error.value)
                         # update in session db peer ids to fix this errors˚
                         async for dialog in self.tg_client.get_dialogs():
