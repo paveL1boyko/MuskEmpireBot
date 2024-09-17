@@ -257,7 +257,7 @@ class CryptoBotApi:
         return response_json["data"]
 
     @error_handler()
-    @handle_request("/pvp/start/fight")
+    @handle_request("/pvp/fight/start")
     async def get_pvp_fight(self, *, response_json: dict, json_body: dict) -> PvpData | None:
         if response_json["data"].get("opponent"):
             return PvpData(**response_json["data"])
