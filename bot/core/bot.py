@@ -99,7 +99,11 @@ class CryptoBot(CryptoBotApi):
                 await self.quest_reward_claim(json_body={"data": [i["key"], None]})
                 self.logger.info(f'Quest <g>{i["key"]}</g> claimed ')
 
+    def random_pvp_count(self) -> int:
+        return random.randint(config.PVP_COUNT, config.PVP_COUNT * 2)
+
     async def _perform_pvp(self, league: dict, strategy: str) -> None:
+        self.pvp_count = self.random_pvp_count()
         self.logger.info(
             f"PvP negotiations started | League: <blue>{league['key']}</blue> | Strategy: <g>{strategy}</g>"
         )
@@ -146,7 +150,7 @@ class CryptoBot(CryptoBotApi):
                 f"Opponent strategy: <blue>{opponent_strategy}</blue> | "
                 f"{log_part}"
             )
-            await self.sleeper(additional_delay=9)
+            await self.sleeper(additional_delay=10)
             await self.get_pvp_claim()
             self.pvp_count -= 1
             await self.sleeper()
