@@ -77,19 +77,24 @@ class CryptoBot(CryptoBotApi):
         helper_data.youtube.update(load_codes_from_files())
         all_daily_quests = await self.all_daily_quests()
         for key, value in all_daily_quests.items():
-            desc = value["description"]
-            if (
-                value["type"] == "youtube"
-                and not value["isRewarded"]
-                and (code := helper_data.youtube.get(value["description"])) is not None
-            ):
-                await self.daily_quest_reward(json_body={"data": {"quest": key, "code": str(code)}})
-                self.logger.info(f"Quest <g>{desc}</g> claimed")
-            elif desc:
-                self.logger.info(f"Quest not executed: \n<r>{desc}</r>")
-            if not value["isRewarded"] and value["isComplete"] and not value["url"]:
-                await self.daily_quest_reward(json_body={"data": {"quest": key, "code": None}})
-                self.logger.info(f"Quest <g>{key}</g> claimed")
+            desc = value.get("description") or value.get("title") or value.get("key") or "Unknown Quest"
+            try:
+                if value["type"] == "youtube":
+                    if not value["isRewarded"]:
+                        code = helper_data.youtube.get(desc)
+                        if code is not None:
+                            await self.daily_quest_reward(json_body={"data": {"quest": key, "code": str(code)}})
+                            self.logger.info(f"Quest <g>{desc}</g> claimed")
+                        else:
+                            self.logger.warning(f"No code found for quest: {desc}")
+                    else:
+                        self.logger.info(f"Quest <g>{desc}</g> already rewarded")
+                elif not value["isRewarded"]:
+                    self.logger.info(f"Quest not executed: \n<r>{desc}</r>")
+                else:
+                    self.logger.info(f"Quest <g>{desc}</g> already rewarded")
+            except Exception as e:
+                self.logger.error(f"Error processing quest {desc}: {e}")
 
     async def claim_all_executed_quest(self) -> None:
         for i in self.data_after.quests:
@@ -250,12 +255,12 @@ class CryptoBot(CryptoBotApi):
     async def _upgrade_mining_skill(self, available_skill: list[DbSkill]) -> None:
         for skill in [skill for skill in available_skill if skill.category == "mining"]:
             if (
-                skill.key in config.MINING_ENERGY_SKILLS
-                and skill.next_level <= config.MAX_MINING_ENERGY_RECOVERY_UPGRADE_LEVEL
-                or (
+                    skill.key in config.MINING_ENERGY_SKILLS
+                    and skill.next_level <= config.MAX_MINING_ENERGY_RECOVERY_UPGRADE_LEVEL
+                    or (
                     skill.next_level <= config.MAX_MINING_UPGRADE_LEVEL
                     or skill.skill_price <= config.MAX_MINING_UPGRADE_COSTS
-                )
+            )
             ):
                 await self._upgrade_skill(skill)
 
@@ -264,9 +269,9 @@ class CryptoBot(CryptoBotApi):
 
     async def _upgrade_hero_skill(self, available_skill: list[DbSkill]) -> None:
         for skill in sorted(
-            [skill for skill in available_skill if skill.weight],
-            key=lambda x: x.weight,
-            reverse=True,
+                [skill for skill in available_skill if skill.weight],
+                key=lambda x: x.weight,
+                reverse=True,
         ):
             if skill.title in config.SKIP_TO_UPGRADE_SKILLS:
                 continue
@@ -315,9 +320,9 @@ class CryptoBot(CryptoBotApi):
         if not skill_requirements:
             return True
         return (
-            len(self.data_after.friends) >= skill_requirements.requiredFriends
-            and self.user_profile.level >= skill_requirements.requiredHeroLevel
-            and self._is_can_learn_skill(skill_requirements)
+                len(self.data_after.friends) >= skill_requirements.requiredFriends
+                and self.user_profile.level >= skill_requirements.requiredHeroLevel
+                and self._is_can_learn_skill(skill_requirements)
         )
 
     def _is_can_learn_skill(self, level: SkillLevel) -> bool:
@@ -350,9 +355,9 @@ class CryptoBot(CryptoBotApi):
             proxy_conn = None
 
         async with aiohttp.ClientSession(
-            headers=headers,
-            connector=proxy_conn,
-            timeout=aiohttp.ClientTimeout(total=60),
+                headers=headers,
+                connector=proxy_conn,
+                timeout=aiohttp.ClientTimeout(total=60),
         ) as http_client:
             self.http_client = http_client
             if proxy:
