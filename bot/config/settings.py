@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     TAPS_ENABLED: bool = True
     TAPS_PER_SECOND: list[int] = [20, 30]
     AUTO_UPGRADE_HERO: bool = True
-    PVP_ENABLED: bool = True
+    PVP_ENABLED: bool = False
     PVP_LEAGUE: League = League.bronze
     PVP_STRATEGY: Strategy = Strategy.random
     PVP_COUNT: int = 5
@@ -70,7 +70,7 @@ class Settings(BaseSettings):
     )
     SKIP_TO_UPGRADE_SKILLS: list = Field([], description='Skip upgrade skills. For example: ["Уборщик", "Рекрутер,HR"]')
 
-    BOT_SLEEP_TIME: list[int] = [3000, 3500]
+    BOT_SLEEP_TIME: list[int] = [3000, 4500]
     REF_ID: str = "hero1092379081"
     base_url: str = "https://game.muskempire.io/"
     bot_name: str = "empirebot"

@@ -256,12 +256,12 @@ class CryptoBot(CryptoBotApi):
     async def _upgrade_mining_skill(self, available_skill: list[DbSkill]) -> None:
         for skill in [skill for skill in available_skill if skill.category == "mining"]:
             if (
-                    skill.key in config.MINING_ENERGY_SKILLS
-                    and skill.next_level <= config.MAX_MINING_ENERGY_RECOVERY_UPGRADE_LEVEL
-                    or (
+                skill.key in config.MINING_ENERGY_SKILLS
+                and skill.next_level <= config.MAX_MINING_ENERGY_RECOVERY_UPGRADE_LEVEL
+                or (
                     skill.next_level <= config.MAX_MINING_UPGRADE_LEVEL
                     or skill.skill_price <= config.MAX_MINING_UPGRADE_COSTS
-            )
+                )
             ):
                 await self._upgrade_skill(skill)
 
@@ -270,9 +270,9 @@ class CryptoBot(CryptoBotApi):
 
     async def _upgrade_hero_skill(self, available_skill: list[DbSkill]) -> None:
         for skill in sorted(
-                [skill for skill in available_skill if skill.weight],
-                key=lambda x: x.weight,
-                reverse=True,
+            [skill for skill in available_skill if skill.weight],
+            key=lambda x: x.weight,
+            reverse=True,
         ):
             if skill.title in config.SKIP_TO_UPGRADE_SKILLS:
                 continue
@@ -321,9 +321,9 @@ class CryptoBot(CryptoBotApi):
         if not skill_requirements:
             return True
         return (
-                len(self.data_after.friends) >= skill_requirements.requiredFriends
-                and self.user_profile.level >= skill_requirements.requiredHeroLevel
-                and self._is_can_learn_skill(skill_requirements)
+            len(self.data_after.friends) >= skill_requirements.requiredFriends
+            and self.user_profile.level >= skill_requirements.requiredHeroLevel
+            and self._is_can_learn_skill(skill_requirements)
         )
 
     def _is_can_learn_skill(self, level: SkillLevel) -> bool:
@@ -356,9 +356,9 @@ class CryptoBot(CryptoBotApi):
             proxy_conn = None
 
         async with aiohttp.ClientSession(
-                headers=headers,
-                connector=proxy_conn,
-                timeout=aiohttp.ClientTimeout(total=60),
+            headers=headers,
+            connector=proxy_conn,
+            timeout=aiohttp.ClientTimeout(total=60),
         ) as http_client:
             self.http_client = http_client
             if proxy:
@@ -370,7 +370,6 @@ class CryptoBot(CryptoBotApi):
                     break
                 try:
                     if await self.login_to_app(proxy):
-
                         # if not self.settings_was_set:
                         #     await self.sent_eng_settings()
                         data = await self.get_profile_full()
@@ -410,8 +409,8 @@ class CryptoBot(CryptoBotApi):
 
                     await self.upgrade_hero()
 
-                    if config.PVP_ENABLED:
-                        await self.starting_pvp()
+                    # if config.PVP_ENABLED:
+                    #     await self.starting_pvp()
                     await self.syn_hero_balance()
                     sleep_time = random.randint(*config.BOT_SLEEP_TIME)
                     self.logger.info(f"Sleep minutes {sleep_time // 60} minutes")
