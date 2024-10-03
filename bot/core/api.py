@@ -138,7 +138,7 @@ class CryptoBotApi:
             await asyncio.sleep(e.value)
             raise
 
-    async def sleeper(self, delay: int = config.RANDOM_SLEEP_TIME, additional_delay: int = 4) -> None:
+    async def sleeper(self, delay: int = config.RANDOM_SLEEP_TIME, additional_delay: int = 6) -> None:
         await asyncio.sleep(random.random() * delay + additional_delay)
 
     @error_handler()
@@ -163,6 +163,7 @@ class CryptoBotApi:
             f"Balance: <y>{num_prettier(self.balance)}</y> | "
             f"Money per hour: <g>{num_prettier(self.mph)}</g>"
         )
+        await self.sleeper()
         return Profile(**response_json["data"])
 
     @error_handler()
