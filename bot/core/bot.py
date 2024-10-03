@@ -64,6 +64,7 @@ class CryptoBot(CryptoBotApi):
                     }
                 }
                 energy = await self.api_perform_taps(json_body=json_data)
+                await self.sleeper(additional_delay=8)
                 self.logger.success(
                     f"Earned money: <y>+{num_prettier(earned_money)}</y> | Energy left: <blue>{num_prettier(energy)}</blue>"
                 )
