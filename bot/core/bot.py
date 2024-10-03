@@ -86,7 +86,7 @@ class CryptoBot(CryptoBotApi):
                             await self.daily_quest_reward(json_body={"data": {"quest": key, "code": str(code)}})
                             self.logger.info(f"Quest <g>{desc}</g> claimed")
                         else:
-                            self.logger.warning(f"No code found for quest: {desc}")
+                            self.logger.warning(f"No code found for quest: \n<r>{desc}</r>")
                     else:
                         self.logger.info(f"Quest <g>{desc}</g> already rewarded")
                 elif not value["isRewarded"]:
@@ -369,11 +369,16 @@ class CryptoBot(CryptoBotApi):
                     break
                 try:
                     if await self.login_to_app(proxy):
+
                         # if not self.settings_was_set:
                         #     await self.sent_eng_settings()
                         data = await self.get_profile_full()
                         self.dbs = data["dbData"]
-                        await self.get_box_rewards()
+                        self.data_after = await self.user_data_after()
+
+                        await self.purchase_list()
+                        await self.billing_balance()
+                        await self.avatar_generated_all()
 
                         self.user_profile: ProfileData = ProfileData(**data)
                         if self.user_profile.offline_bonus > 0:
@@ -381,10 +386,10 @@ class CryptoBot(CryptoBotApi):
 
                     profile = await self.syn_hero_balance()
 
+                    await self.get_box_rewards()
+
                     config.MONEY_TO_SAVE = self.bet_calculator.max_bet()
                     self.logger.info(f"Max bet for funds saved: <y>{num_prettier(config.MONEY_TO_SAVE)}</y>")
-
-                    self.data_after = await self.user_data_after()
 
                     await self.claim_daily_reward()
 

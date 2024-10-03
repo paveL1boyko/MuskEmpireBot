@@ -168,7 +168,7 @@ class CryptoBotApi:
     @error_handler()
     @handle_request("/user/data/all", json_body={"data": {}})
     async def get_profile_full(self, *, response_json: dict) -> dict:
-        return dict(**response_json["data"])
+        return response_json["data"]
 
     @error_handler()
     @handle_request("/user/data/after", json_body={"data": {"lang": "en"}})
@@ -221,6 +221,21 @@ class CryptoBotApi:
         data = self._update_money_balance(response_json)
         self.tapped_today = data.get("tappedToday", 0)
         return int(data["hero"]["earns"]["task"]["energy"])
+
+    @error_handler()
+    @handle_request("/billing/balance")
+    async def billing_balance(self, *, response_json: dict) -> dict:
+        return response_json
+
+    @error_handler()
+    @handle_request("/purchase/list")
+    async def purchase_list(self, *, response_json: dict) -> dict:
+        return response_json
+
+    @error_handler()
+    @handle_request("/avatar/generated/all")
+    async def avatar_generated_all(self, *, response_json: dict) -> dict:
+        return response_json
 
     @cached(ttl=2 * 60 * 60, cache=Cache.MEMORY)
     @error_handler()
@@ -284,7 +299,8 @@ class CryptoBotApi:
             }
         },
     )
-    async def sent_eng_settings(self, *, response_json: dict) -> None: ...
+    async def sent_eng_settings(self, *, response_json: dict) -> None:
+        ...
 
     @error_handler()
     @handle_request("/fund/invest")

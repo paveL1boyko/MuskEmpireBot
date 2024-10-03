@@ -108,7 +108,7 @@ class UserDataAfter(BaseModel):
 class Profile(BaseModel):
     money_per_tap: int = Field(validation_alias=AliasPath("hero", "earns", "task", "moneyPerTap"))
     limit: int = Field(validation_alias=AliasPath("hero", "earns", "task", "limit"))
-    energy: int = Field(validation_alias=AliasPath("hero", "earns", "task", "energy"))
+    energy: int | float = Field(validation_alias=AliasPath("hero", "earns", "task", "energy"))
     energy_recovery: int = Field(validation_alias=AliasPath("hero", "earns", "task", "recoveryPerSecond"))
 
     money: int = Field(validation_alias=AliasPath("hero", "money"))
