@@ -408,8 +408,6 @@ class CryptoBot(CryptoBotApi):
 
                     await self.claim_all_executed_quest()
 
-                    await self.syn_hero_balance()
-
                     await self.upgrade_hero()
 
                     if config.PVP_ENABLED:
