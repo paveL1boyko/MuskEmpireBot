@@ -290,7 +290,7 @@ class CryptoBot(CryptoBotApi):
                     f"Money stay: <y>{num_prettier(self.balance)}</y> "
                     f"Skill weight <magenta>{skill.weight:.5f}</magenta>"
                 )
-                await self.sleeper()
+                await self.sleeper(additional_delay=6)
             except ValueError:
                 self.logger.exception(f"Failed to upgrade skill: {skill}")
                 raise
