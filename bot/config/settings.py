@@ -70,7 +70,7 @@ class Settings(BaseSettings):
     )
     SKIP_TO_UPGRADE_SKILLS: list = Field([], description='Skip upgrade skills. For example: ["Уборщик", "Рекрутер,HR"]')
     SLEEP_AFTER_UPGRADE_NUM_SKILLS: list[int] = [20, 30]
-    NUM_SKILLS: list[int] = [7, 9]
+    NUM_SKILLS: list[int] = 8
 
     BOT_SLEEP_TIME: list[int] = [1400, 2000]
     REF_ID: str = "hero1092379081"
