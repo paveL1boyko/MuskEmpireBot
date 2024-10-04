@@ -55,7 +55,7 @@ class CryptoBot(CryptoBotApi):
             if energy < 0:
                 self.logger.info("Taps stopped (not enough energy)")
                 break
-            await asyncio.sleep(delay=seconds)
+            await self.sleeper(additional_delay=seconds)
             try:
                 json_data = {
                     "data": {
@@ -254,6 +254,7 @@ class CryptoBot(CryptoBotApi):
                 self.logger.info(f"Box <g>{key}</g> Was looted: <y>{res['loot']}</y>")
 
     async def _upgrade_mining_skill(self, available_skill: list[DbSkill]) -> None:
+        counter = 0
         for skill in [skill for skill in available_skill if skill.category == "mining"]:
             if (
                 skill.key in config.MINING_ENERGY_SKILLS
@@ -263,12 +264,17 @@ class CryptoBot(CryptoBotApi):
                     or skill.skill_price <= config.MAX_MINING_UPGRADE_COSTS
                 )
             ):
+                if counter >= config.NUM_SKILLS:
+                    counter = 0
+                    await self.sleeper(additional_delay=random.randint(*config.SLEEP_AFTER_UPGRADE_NUM_SKILLS))
                 await self._upgrade_skill(skill)
+                counter += 1
 
     def _is_enough_money_for_upgrade(self, skill: DbSkill) -> bool:
         return (self.balance - skill.skill_price) >= config.MONEY_TO_SAVE
 
     async def _upgrade_hero_skill(self, available_skill: list[DbSkill]) -> None:
+        counter = 0
         for skill in sorted(
             [skill for skill in available_skill if skill.weight],
             key=lambda x: x.weight,
@@ -278,7 +284,11 @@ class CryptoBot(CryptoBotApi):
                 continue
             # if skill.weight >= config.SKILL_WEIGHT or skill.skill_price <= config.MAX_SKILL_UPGRADE_COSTS:
             if skill.weight >= config.SKILL_WEIGHT:
+                if counter >= config.NUM_SKILLS:
+                    counter = 0
+                    await self.sleeper(additional_delay=random.randint(*config.SLEEP_AFTER_UPGRADE_NUM_SKILLS))
                 await self._upgrade_skill(skill)
+                counter += 1
 
     async def _upgrade_skill(self, skill: DbSkill) -> None:
         if self._is_enough_money_for_upgrade(skill):
