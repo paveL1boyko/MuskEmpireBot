@@ -180,16 +180,17 @@ class CryptoBot(CryptoBotApi):
             quest_key = quest["key"]
             if quest["requiredLevel"] > self.user_profile.level:
                 continue
-            if "t.me" in (link := quest.get("actionUrl")) and not self._is_event_solved(quest_key):
-                if len(link.split("/")) > 4 or "muskempire" in link:
-                    continue
-                if quest["checkType"] != "fakeCheck":
-                    link = link if "/+" in link else link.split("/")[-1]
-                    await self.join_and_archive_channel(link)
-                await self.quest_check(json_body={"data": [quest_key]})
-                self.logger.info(
-                    f'Claimed <g>{quest["title"]}</g> Reward: <y>+{num_prettier(quest["rewardMoney"])}</y>quest'
-                )
+            if config.SKIP_TG_SUBSCRIPTION:
+                if "t.me" in (link := quest.get("actionUrl")) and not self._is_event_solved(quest_key):
+                    if len(link.split("/")) > 4 or "muskempire" in link:
+                        continue
+                    if quest["checkType"] != "fakeCheck":
+                        link = link if "/+" in link else link.split("/")[-1]
+                        await self.join_and_archive_channel(link)
+                    await self.quest_check(json_body={"data": [quest_key]})
+                    self.logger.info(
+                        f'Claimed <g>{quest["title"]}</g> Reward: <y>+{num_prettier(quest["rewardMoney"])}</y>quest'
+                    )
             if any(i in quest_key for i in ("riddle", "rebus", "tg_story")) and not self._is_event_solved(quest_key):
                 await self.quest_check(json_body={"data": [quest_key, quest["checkData"]]})
                 self.logger.info(f"Was solved <g>{quest['title']}</g>")
