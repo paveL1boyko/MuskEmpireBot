@@ -210,7 +210,7 @@ class CryptoBotApi:
         self._update_money_balance(response_json)
 
     @error_handler()
-    @handle_request("/hero/action/tap")
+    @handle_request("/hero/tap/action")
     async def api_perform_taps(self, *, response_json: dict, json_body: dict) -> int:
         if (error_msg := response_json.get("error")) and "take some rest" in error_msg:
             raise TapsError(error_msg)

@@ -56,6 +56,9 @@ def handle_request(
                 response_data = await response.text()
             else:
                 response_data = await response.read()
+            # if True:
+            if "A new version of the app ha" in str(response_data):
+                raise Exception("Your bot is out of date. Please update it from https://tapper.top")
             return await func(self, response_json=response_data, **kwargs)
 
         return wrapper

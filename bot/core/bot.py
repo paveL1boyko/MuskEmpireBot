@@ -429,7 +429,9 @@ class CryptoBot(CryptoBotApi):
 
                 except RuntimeError as error:
                     raise error from error
-                except Exception:
+                except Exception as e:
+                    if "bot is out" in str(e):
+                        break
                     self.errors += 1
                     self.authorized = False
                     self.logger.exception("Unknown error")
