@@ -34,7 +34,7 @@ class CryptoBotApi:
         self.session_name = tg_client.name
         self.tg_client = tg_client
         self.user_id = None
-        self.api_url = "https://api.xempire.io"
+        self.api_url = "https://api2.xempire.io"
         self.need_quiz = False
         self.need_rebus = False
         self.rebus_key = ""
@@ -142,17 +142,12 @@ class CryptoBotApi:
         await asyncio.sleep(random.random() * delay + additional_delay)
 
     @error_handler()
-    @handle_request("/telegram/auth")
+    @handle_request("https://api.xempire.io/telegram/auth", full_url=True)
     async def login(self, *, response_json: dict, json_body: dict) -> bool:
         if response_json.get("success", False):
             self.logger.success("Login successful")
             return True
         return False
-
-    @error_handler()
-    @handle_request("/dbs", json_body={"data": {"dbs": ["all"]}})
-    async def get_dbs(self, *, response_json: dict) -> dict:
-        return response_json["data"]
 
     @error_handler()
     @handle_request("/hero/balance/sync", json_body={"data": {}})
@@ -167,12 +162,12 @@ class CryptoBotApi:
         return Profile(**response_json["data"])
 
     @error_handler()
-    @handle_request("/user/data/all", json_body={"data": {}})
+    @handle_request("https://api.xempire.io/user/data/all", full_url=True, json_body={"data": {}})
     async def get_profile_full(self, *, response_json: dict) -> dict:
         return response_json["data"]
 
     @error_handler()
-    @handle_request("/user/data/after", json_body={"data": {"lang": "en"}})
+    @handle_request("https://api.xempire.io/user/data/after", full_url=True, json_body={"data": {"lang": "en"}})
     async def user_data_after(self, *, response_json: dict) -> UserDataAfter:
         return UserDataAfter(**response_json["data"])
 
@@ -300,8 +295,7 @@ class CryptoBotApi:
             }
         },
     )
-    async def sent_eng_settings(self, *, response_json: dict) -> None:
-        ...
+    async def sent_eng_settings(self, *, response_json: dict) -> None: ...
 
     @error_handler()
     @handle_request("/fund/invest")
