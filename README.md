@@ -74,20 +74,22 @@
 ## Установка
 Вы можете скачать [**Репозиторий**](https://github.com/paveL1boyko/MuskEmpireBot.git) клонированием на вашу систему и установкой необходимых зависимостей:
 ```shell
-git clone https://github.com/paveL1boyko/MuskEmpireBot.git.git
+git clone https://github.com/paveL1boyko/MuskEmpireBot.git
 cd MuskEmpireBot
+INSTALL.sh
+START.sh
 ```
 
 Затем для автоматической установки введите:
 
 Windows:
 ```shell
-run.bat
+INSTALL.bat
 ```
 
 Linux:
 ```shell
-run.sh
+INSTALL.sh
 ```
 
 # Linux ручная установка
