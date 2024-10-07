@@ -236,7 +236,7 @@ class CryptoBotApi:
     @cached(ttl=2 * 60 * 60, cache=Cache.MEMORY)
     @error_handler()
     @handle_request(
-        "https://raw.githubusercontent.com/testingstrategy/musk_daily/main/daily.json",
+        "https://raw.githubusercontent.com/paveL1boyko/musk_daily/main/daily.json",
         method="GET",
         full_url=True,
     )
