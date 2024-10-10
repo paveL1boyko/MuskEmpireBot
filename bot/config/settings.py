@@ -62,6 +62,7 @@ class Settings(BaseSettings):
     MAX_MINING_ENERGY_RECOVERY_UPGRADE_LEVEL: int = 60
     MINING_ENERGY_SKILLS: list[str] = ["energy_capacity", "energy_recovery", "profit_per_tap_power"]
     MAX_MINING_UPGRADE_COSTS: int = 5_000_000
+    GET_FRIEND_REWARD: bool = True
 
     SKIP_IMPROVE_DISCIPLINE_BUG: bool = Field(
         default=False,

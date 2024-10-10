@@ -407,8 +407,8 @@ class CryptoBot(CryptoBotApi):
                     await self.execute_and_claim_daily_quest()
 
                     await self.syn_hero_balance()
-
-                    await self.get_friend_reward()
+                    if config.GET_FRIEND_REWARD:
+                        await self.get_friend_reward()
 
                     if config.TAPS_ENABLED and profile.energy and time.monotonic() > self.temporary_stop_taps_time:
                         await self.perform_taps(profile)
